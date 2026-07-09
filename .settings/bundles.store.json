@@ -6,7 +6,7 @@
     },
     {
       "name": "ninja",
-      "version": "^1.12.1+st.9"
+      "version": "1.12.1+st.9"
     },
     {
       "name": "gnu-tools-for-stm32",
@@ -22,7 +22,7 @@
     },
     {
       "name": "jlink-gdbserver",
-      "version": "^8.38.0+st.1"
+      "version": "8.38.0+st.1"
     },
     {
       "name": "st-arm-clang",

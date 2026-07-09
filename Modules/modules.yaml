@@ -1,28 +1,23 @@
-# XRobot module configuration example
 modules:
-  - xrobot-org/BlinkLED
-  - xrobot-org/MadgwickAHRS
-  - xrobot-org/BuzzerAlarm
-  - xrobot-org/SharedTopic
-  - xrobot-org/SharedTopicClient
-  - xrobot-org/BMI088
-  - qdu-future/CameraSync
-  - qdu-future/CMD
-  - qdu-future/DR16
-  - qdu-future/RMMotor
-  - qdu-future/DMMotor
-  - qdu-future/Chassis
-  - qdu-future/Gimbal
-  - qdu-future/InfantryLauncher
-  - qdu-future/EventBinder
-  - qdu-future/HostData
-  - qdu-future/LegVmc
-  - qdu-future/PowerControl
-  - qdu-future/SuperPower
-  - qdu-future/Motor
-  - qdu-future/Referee
-  - qdu-future/VT13
-  - qdu-future/SentryProtocol
-  - qdu-future/Dart
-  - qdu-future/HeroLauncher
-  - qdu-future/MiniGimbal
+- xrobot-org/BlinkLED
+- xrobot-org/BMI088
+- xrobot-org/MadgwickAHRS
+- xrobot-org/IST8310
+- xrobot-org/BuzzerAlarm
+- qdu-future/CMD
+- qdu-future/Chassis
+- qdu-future/Gimbal
+- qdu-future/EventBinder
+- qdu-future/PowerControl
+- qdu-future/Referee
+- qdu-future/RMMotor
+- qdu-future/DMMotor
+- qdu-future/DebugCore
+- qdu-future/VT13
+- qdu-future/DR16
+- qdu-future/SuperPower
+- qdu-future/SentryProtocol
+- qdu-future/InfantryLauncher
+- qdu-future/HostData
+- xrobot-org/SharedTopic
+- xrobot-org/SharedTopicClient

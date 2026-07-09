@@ -1,0 +1,20 @@
+{
+  "last_debug": {
+    "provider": "jlink",
+    "action": "go",
+    "device": "STM32F407IG",
+    "interface": "SWD",
+    "speed": "4000",
+    "serial_no": "",
+    "timestamp": "2026-07-09T03:58:37+08:00"
+  },
+  "last_flash": {
+    "provider": "jlink",
+    "action": "flash",
+    "device": "STM32F407IG",
+    "interface": "SWD",
+    "speed": "4000",
+    "serial_no": "",
+    "timestamp": "2026-07-09T03:57:39+08:00"
+  }
+}
