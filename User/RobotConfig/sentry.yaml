@@ -91,6 +91,14 @@ modules:
     motor_count_3508: 4
     motor_count_6020: 4
 - id: motor_yaw
+  name: RMMotor
+  constructor_args:
+    param:
+      model: RMMotor::Model::MOTOR_GM6020
+      reverse: false
+      feedback_id: 0x206
+      can_bus_name: can2
+- id: motor_pit
   name: DMMotor
   constructor_args:
     param:
@@ -98,14 +106,6 @@ modules:
       reverse: false
       can_id: 1
       can_bus_name: can2
-- id: motor_pit
-  name: RMMotor
-  constructor_args:
-    param:
-      model: RMMotor::Model::MOTOR_GM6020
-      reverse: false
-      feedback_id: 521
-      can_bus_name: can1
 - id: gimbal
   name: Gimbal
   constructor_args:
