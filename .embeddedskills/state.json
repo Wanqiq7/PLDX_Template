@@ -1,12 +1,16 @@
 {
   "last_debug": {
     "provider": "jlink",
-    "action": "go",
+    "action": "run",
     "device": "STM32F407IG",
     "interface": "SWD",
     "speed": "4000",
     "serial_no": "",
-    "timestamp": "2026-07-10T00:50:24+08:00"
+    "debug_file": "build/DevC.elf",
+    "artifacts": {
+      "debug_file": "build/DevC.elf"
+    },
+    "timestamp": "2026-07-10T15:05:03+08:00"
   },
   "last_flash": {
     "provider": "jlink",

@@ -86,10 +86,10 @@ modules:
   name: PowerControl
   constructor_args:
     superpower: '@&super_power'
-    is_helm: true
+    is_helm: false
     chassis_static_power_loss: 5.5
     motor_count_3508: 4
-    motor_count_6020: 4
+    motor_count_6020: 0
 - id: motor_yaw
   name: RMMotor
   constructor_args:
@@ -113,15 +113,15 @@ modules:
     task_stack_depth: 1536
     pid_yaw_angle:
       k: 1.0
-      p: 25.0 #27.0
-      i: 0.0  #8.0
+      p: 1.0
+      i: 0.0
       d: 0.0
       i_limit: 0.015
       out_limit: 0.0
       cycle: true
     pid_yaw_omega:
       k: 1.0
-      p: 2.0 #2.67
+      p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
@@ -129,15 +129,15 @@ modules:
       cycle: false
     pid_pit_angle:
       k: 1
-      p: 90.0
+      p: 1.0
       i: 0.0
-      d: 0.003
+      d: 0.0
       i_limit: 0.0
       out_limit: 0
       cycle: true
     pid_pit_omega:
       k: 1.0
-      p: 0.47
+      p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
@@ -195,7 +195,7 @@ modules:
   name: RMMotor
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_GM6020
+      model: RMMotor::Model::MOTOR_NONE
       reverse: false
       feedback_id: 520
       can_bus_name: can2
@@ -203,7 +203,7 @@ modules:
   name: RMMotor
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_GM6020
+      model: RMMotor::Model::MOTOR_NONE
       reverse: false
       feedback_id: 517
       can_bus_name: can2
@@ -211,7 +211,7 @@ modules:
   name: RMMotor
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_GM6020
+      model: RMMotor::Model::MOTOR_NONE
       reverse: false
       feedback_id: 518
       can_bus_name: can2
@@ -219,11 +219,11 @@ modules:
   name: RMMotor
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_GM6020
+      model: RMMotor::Model::MOTOR_NONE
       reverse: false
       feedback_id: 519
       can_bus_name: can2
-- id: helm_chassis
+- id: chassis
   name: Chassis
   constructor_args:
     motor_wheel_0: '@&motor_wheel_0'
@@ -383,7 +383,7 @@ modules:
       cycle: false
     thread_priority: LibXR::Thread::Priority::HIGH
   template_args:
-    ChassisType: Helm
+    ChassisType: Omni
 - id: motor_trig
   name: RMMotor
   constructor_args:
@@ -465,7 +465,7 @@ modules:
     - name: cmd
       module_ref: '@cmd'
     - name: chassis
-      module_ref: '@helm_chassis'
+      module_ref: '@chassis'
     - name: gimbal
       module_ref: '@gimbal'
     - name: launcher
