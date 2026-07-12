@@ -152,7 +152,7 @@ pit_torque_limit = 10.0 N·m
 
 ```text
 CAN ID: tx_id + 0x10（sentry 底盘为 0x321）
-周期: 5 ms
+周期: 10 ms
 
 int16 gyro_x_q
 int16 gyro_y_q
@@ -169,7 +169,8 @@ bitfield；超过编码范围时置 `GYRO_VALID=0`。`mode_and_flags` 的低位�
 `data_mutex_` 下完成，避免新增并发竞态；Gimbal 侧只将其转换为
 `chassis_rotor_active`。
 
-底盘 BMI 样本停止更新、数值非有限或本地 freshness 超时后，帧仍可作为心跳发送，
+10 ms 周期与 DualBoard 现有 `CONTROL_PERIOD_MS` 一致，不在首验中额外要求 5 ms
+运动帧。底盘 BMI 样本停止更新、数值非有限或本地 freshness 超时后，帧仍可作为心跳发送，
 但必须清除 `GYRO_VALID`；不能把旧 gyro 当作新样本重发。只有新样本到达时才递增
 `sequence`。接收端按 `delta != 0 && delta < 128` 接受序号，支持 `254 -> 255 -> 0`，
 发送端超时重启后允许重新建立序号基准。收到无效帧时立即发布
@@ -178,11 +179,11 @@ bitfield；超过编码范围时置 `GYRO_VALID=0`。`mode_and_flags` 的低位�
 ### 5.3 Freshness 与角加速度
 
 Gimbal 只在收到有效且序号前进的 MotionFrame 时更新 `chassis_gyro_z_` 和样本年龄。
-运动数据年龄 `<= 30 ms` 才允许速度前馈，`100 ms` 时强制权重为 0；权重在
-50--100 ms 内渐入/渐出。
+运动数据年龄 `<= 30 ms` 才允许满权重速度前馈；30--80 ms 之间平滑退到 0，
+`100 ms` 为链路硬离线保险。10 ms 帧允许连续丢失两帧而不立即退出前馈。
 
-`chassis_alpha_z` 只对新的 5 ms MotionFrame 样本求差分，使用 Topic 时间戳间隔，
-不能按 2 ms Gimbal 控制周期重复差分。首帧、序号重置、异常时间间隔时加速度置 0，
+`chassis_alpha_z` 只对新的 10 ms MotionFrame 样本求差分，使用 Topic 时间戳间隔，
+不能按每轮 Gimbal 控制周期重复差分。首帧、序号重置、异常时间间隔时加速度置 0，
 随后执行低通、死区和限幅。`rotor_accel_k` 默认 0，必须在速度前馈 A/B 通过后单独
 评估。
 
@@ -192,15 +193,24 @@ Gimbal 只在收到有效且序号前进的 MotionFrame 时更新 `chassis_gyro_
 
 ## 6. 时序与失效安全
 
-`Gimbal::ThreadFunc()` 改用 `SleepUntil`，控制线程保持 2 ms 周期。命令、Euler、
-gyro 和电机反馈都记录最近时间戳；异常 `dt` 不进入 PID 微分或惯量前馈，并重置相应
-历史量。
+当前 `Gimbal::ThreadFunc()` 使用 `Sleep(2)`。在 1 kHz FreeRTOS tick 下，实际循环
+周期是“本轮计算和抢占时间 + 2 tick”，不是固定 2 ms，也不能直接视为严格 500 Hz。
+首验先用 Ozone 记录至少 30 s 的 `dt` 基线；保留 `Sleep(2)` 作为 A 组，
+`SleepUntil` 作为消除累计漂移的 B 组。只有 B 组显著改善周期分布且不增加 CPU/CAN
+压力时才采用，`dt == 2 ms` 不是验收事实。
+
+数值保护使用宽于正常调度的窗口：`0.5 ms < dt <= 20 ms`。超出窗口时本周期不做
+目标积分、PID 微分、惯量前馈或底盘角加速度前馈，并重置导数历史；不能把异常 `dt`
+简单 clamp 后继续积分。命令、Euler、gyro 和电机反馈记录最近时间戳，但正常控制不要求
+每个 Gimbal 周期都收到一份新样本。
 
 电机 freshness 独立于 rotor 算法：
 
-- `DMMotor::Update()` 增加首次反馈宽限和首次反馈后的时间超时，修复当前无条件返回
-  `OK` 的问题。
+- `DMMotor::Update()` 增加 200 ms 首次反馈宽限和首次反馈后的时间超时，修复当前
+  无条件返回 `OK` 的问题。
 - `RMMotor` 将循环次数离线判断改为基于时间的判断。
+- 电机反馈 50 ms 未更新只记录警告，150 ms 未更新才判硬离线；基线若证明 150 ms
+  仍会误判，可在首验前放宽，但不得超过 200 ms。
 - 任一云台电机反馈无效时，Gimbal 进入 RELAX，不使用旧反馈。
 - 底盘运动数据失效只关闭底盘前馈，不影响云台自身惯性闭环。
 
@@ -211,9 +221,9 @@ HostData 的 150 ms 目标 freshness 保留为独立后续安全任务，不能�
 
 ### T0：基线与硬件门禁（无代码）
 
-冻结供电、功率限制、温度、测试速度和 500 Hz 周期，采集静止、人工移动和 ROTOR
-三组 Ozone 基线。确认两块 BMI088 的轴向、单位、正负号，并记录 raw -> AHRS ->
-Gimbal -> FOLLOW 的符号链。
+冻结供电、功率限制、温度和测试速度，采集静止、人工移动和 ROTOR 三组 Ozone
+基线。记录当前 `Sleep(2)` 下的实际控制周期分布，不预设其等于 500 Hz。确认两块
+BMI088 的轴向、单位、正负号，并记录 raw -> AHRS -> Gimbal -> FOLLOW 的符号链。
 
 ### T1：坐标兼容门禁
 
@@ -224,7 +234,8 @@ Gimbal -> FOLLOW 的符号链。
 ### T2：Gimbal 时序、数值保护和限幅
 
 只改 Gimbal 控制内部，不开启新的底盘项。使用同一输入回放比较原始输出与限幅后的
-输出，覆盖异常 `dt`、NaN、模式切换和扭矩饱和。
+输出，覆盖异常 `dt`、NaN、模式切换和扭矩饱和。控制周期 p50/p95/p99 先作为观测，
+不以固定 2 ms 或 p99 <= 3 ms 阻断首验。
 
 ### T3：反馈 freshness 与 RELAX
 
@@ -238,7 +249,7 @@ Gimbal -> FOLLOW 的符号链。
 
 ### T5：MotionFrame 影子链路
 
-增加底盘 BMI 配置、0x321 帧和两个基础 Topic，但 `rotor_weight` 保持 0。使用 CAN
+增加底盘 BMI 配置、10 ms 的 0x321 帧和两个基础 Topic，但 `rotor_weight` 保持 0。使用 CAN
 回放覆盖丢帧、重复序号、序号回绕、BMI 停更、模式切换和双板断链。
 
 ### T6：ROTOR 速度前馈
@@ -248,7 +259,7 @@ Gimbal -> FOLLOW 的符号链。
 
 ### T7：底盘角加速度前馈（可选）
 
-仅对已接受的 5 ms gyro 样本求导，独立比较 `rotor_accel_k=0` 与非零结果。噪声或
+仅对已接受的 10 ms gyro 样本求导，独立比较 `rotor_accel_k=0` 与非零结果。噪声或
 峰值没有改善时保持关闭。
 
 ### T8：逐车型迁移
@@ -279,10 +290,11 @@ omni_infantry_4, radar, sentry, wheel_leg
 
 | 指标 | 门限 |
 |---|---|
-| 控制周期 | p99 <= 3 ms；正常 60 s 内无 `dt > 10 ms` |
-| 云台 IMU age | 正常 <= 4 ms；超过 30 ms 触发保护 |
-| 底盘 MotionFrame | 接收间隔 p95 <= 10 ms；age <= 30 ms 才前馈；100 ms 硬关闭 |
-| 电机失效 | <= 100 ms 进入 RELAX |
+| 控制周期 | 首验只报告 p50/p95/p99 和 `dt > 4 ms` 次数；`dt <= 0.5 ms` 或 `dt > 20 ms` 触发数值保护 |
+| 控制执行时间 | 先观测，p99 < 1 ms 作为后续目标，不作为首轮阻断门限 |
+| 云台 IMU age | <= 20 ms 正常；20--50 ms 标记 stale 并停用惯量/加速度前馈；> 50 ms 触发硬保护 |
+| 底盘 MotionFrame | 标称 10 ms；接收间隔 p95 <= 20 ms 为观测目标；age <= 30 ms 满权重，80 ms 归零，100 ms 硬离线 |
+| 电机反馈 | 50 ms 记警告；150 ms 判硬离线，且不得配置超过 200 ms |
 | 人工速度前馈 | 动态角误差 RMS 下降至少 15%，超调增加不超过 10% |
 | ROTOR 速度前馈 | Yaw 误差 RMS 下降至少 20%，非 ROTOR 指标恶化不超过 5% |
 | Pitch 重力 | 静态误差和保持扭矩相对基线变化不超过 5% |
