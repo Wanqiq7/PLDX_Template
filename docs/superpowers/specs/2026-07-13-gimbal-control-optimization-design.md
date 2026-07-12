@@ -21,6 +21,24 @@ Topic 语义和 YAML 驱动方式。
 Ozone 负责采集现有类成员并导出完整时间序列，实时控制线程不计算 RMS、p95 或
 窗口统计。
 
+### 1.1 实现约束
+
+实现采用 LibXR-first 原则，并保持各文件原有代码书写风格：
+
+- 调度、时间戳、Topic、回调、互斥、队列、错误码、PID 和周期量优先使用现有
+  `LibXR::Thread`、`LibXR::Timebase`、`LibXR::Topic`、`LibXR::Callback`、
+  `LibXR::Mutex`、`LibXR::MPMCQueue`、`LibXR::ErrorCode`、`LibXR::PID` 和
+  `LibXR::CycleValue`，不重复实现同类基础设施。
+- 只有 LibXR 没有合适接口时才使用 C++ 标准库或文件内局部实现，并在实施计划中
+  说明原因；不得因此修改 `Middlewares/Third_Party/LibXR`。
+- 保持现有类、方法、成员、私有工具函数和控制流程的组织方式；新逻辑直接增量落在
+  `Gimbal.hpp`、`DualBoard.hpp` 及既有电机文件中，不引入新的控制层或公共抽象。
+- 保持模块 manifest 与 YAML 构造参数一一对应，不手工修改生成代码；新增参数必须有
+  向后兼容默认值。
+- 遵守工程现有命名和格式：成员变量使用尾下划线，常量使用大写命名，方法沿用
+  CamelCase，并使用工程指定的 clang-format 版本格式化 `Modules/` 范围。
+- 不为了统一写法重构任务范围外的代码；每项改动应尽量贴近所在文件的既有实现。
+
 ## 2. 固定控制管线
 
 控制顺序保持不变：
