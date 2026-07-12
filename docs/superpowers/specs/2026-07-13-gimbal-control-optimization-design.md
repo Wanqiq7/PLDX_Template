@@ -126,16 +126,19 @@ gravity_ff_pit = -pit_lc * sin(Pitch + pit_theta)
 底盘项只进入执行器侧相对速度模型：
 
 ```text
-omega_motor_ref = omega_I_cmd - rotor_weight * chassis_gyro_z
+rotor_ff_active = rotor_ff_enabled && chassis_rotor_active
+omega_motor_ref = rotor_ff_active
+                    ? omega_I_cmd - chassis_gyro_z
+                    : omega_I_cmd
 
 tau_yaw = rate_PID(omega_I_cmd - gimbal_gyro_z)
          + j_yaw * alpha_I_cmd
          + yaw_k * omega_motor_ref
-         - rotor_accel_k * rotor_weight * chassis_alpha_z
+         - (rotor_ff_active ? rotor_accel_k * chassis_alpha_z : 0)
 ```
 
-`rotor_weight` 仅在底盘实际处于 ROTOR 且运动数据有效时从 0 平滑渐入；数据过期或
-模式退出时渐出。非 ROTOR 路径的 `rotor_weight` 固定为 0。
+进入 ROTOR 后直接以完整底盘角速度补偿，整个 ROTOR 期间保持全量启用；退出 ROTOR
+后直接关闭。不增加 `rotor_weight`、数据年龄分段、渐入或渐出状态机。
 
 ### 4.4 扭矩限幅
 
@@ -188,26 +191,27 @@ bitfield；超过编码范围时置 `GYRO_VALID=0`。`mode_and_flags` 的低位�
 `chassis_rotor_active`。
 
 10 ms 周期与 DualBoard 现有 `CONTROL_PERIOD_MS` 一致，不在首验中额外要求 5 ms
-运动帧。底盘 BMI 样本停止更新、数值非有限或本地 freshness 超时后，帧仍可作为心跳发送，
-但必须清除 `GYRO_VALID`；不能把旧 gyro 当作新样本重发。只有新样本到达时才递增
-`sequence`。接收端按 `delta != 0 && delta < 128` 接受序号，支持 `254 -> 255 -> 0`，
-发送端超时重启后允许重新建立序号基准。收到无效帧时立即发布
-`chassis_rotor_active=false`，但不刷新 gyro 样本时间戳。
+运动帧。数值非有限或编码越界时清除 `GYRO_VALID`；云台端收到显式无效帧时发布零
+gyro 和 `chassis_rotor_active=false`。`sequence` 只用于 CAN 诊断，不参与 Gimbal
+控制启停或 freshness 判定。
 
-### 5.3 Freshness 与角加速度
+### 5.3 直接使用与角加速度
 
-Gimbal 只在收到有效且序号前进的 MotionFrame 时更新 `chassis_gyro_z_` 和样本年龄。
-运动数据年龄 `<= 30 ms` 才允许满权重速度前馈；30--80 ms 之间平滑退到 0，
-`100 ms` 为链路硬离线保险。10 ms 帧允许连续丢失两帧而不立即退出前馈。
+Gimbal 收到有效 MotionFrame 后直接保存最新 `chassis_gyro_z_`。ROTOR 期间始终使用
+该值，不计算 motion age，不增加独立的软/硬离线门限，也不做权重变化。DualBoard
+既有 `offline_timeout_ms` 和离线处理保持原样；完整双板链路离线时，沿既有离线路径
+发布零 gyro 和 `chassis_rotor_active=false`。
 
-`chassis_alpha_z` 只对新的 10 ms MotionFrame 样本求差分，使用 Topic 时间戳间隔，
-不能按每轮 Gimbal 控制周期重复差分。首帧、序号重置、异常时间间隔时加速度置 0，
-随后执行低通、死区和限幅。`rotor_accel_k` 默认 0，必须在速度前馈 A/B 通过后单独
-评估。
+该简化方案明确接受一个残余风险：如果只有 MotionFrame 停更，而其他 DualBoard
+反馈帧仍让整条双板链路保持在线，Gimbal 将继续使用最后一次 `chassis_gyro_z_`。
+首验不为这一局部停更场景增加第二套超时状态机。
 
-跨板端到端延迟不能仅由 Ozone 证明，因为 MotionFrame 不携带源时间戳。Ozone 记录
-接收间隔、最大 age 和丢帧计数；若需要真正的端到端延迟，使用 CAN analyzer 或
-同步 GPIO 台架测试。
+`chassis_alpha_z` 只对新的 10 ms MotionFrame 样本求差分，使用云台板本地接收
+Topic 的时间戳间隔，不能按每轮 Gimbal 控制周期重复差分。首帧或异常时间间隔时加速度置 0，随后执行
+低通、死区和限幅。`rotor_accel_k` 默认 0，必须在速度前馈 A/B 通过后单独评估。
+
+跨板端到端延迟不能仅由 Ozone 证明，因为 MotionFrame 不携带源时间戳。若需要真正
+的端到端延迟，使用 CAN analyzer 或同步 GPIO 台架测试。
 
 ## 6. 时序与失效安全
 
@@ -230,7 +234,8 @@ Gimbal 只在收到有效且序号前进的 MotionFrame 时更新 `chassis_gyro_
 - 电机反馈 50 ms 未更新只记录警告，150 ms 未更新才判硬离线；基线若证明 150 ms
   仍会误判，可在首验前放宽，但不得超过 200 ms。
 - 任一云台电机反馈无效时，Gimbal 进入 RELAX，不使用旧反馈。
-- 底盘运动数据失效只关闭底盘前馈，不影响云台自身惯性闭环。
+- 显式无效 MotionFrame 或既有 DualBoard 离线路径将底盘 gyro 置零并关闭 ROTOR
+  前馈，不影响云台自身惯性闭环；Gimbal 不再维护第二套数据 age。
 
 HostData 的 150 ms 目标 freshness 保留为独立后续安全任务，不能依赖 1 Hz
 `OnMonitor()` 才清零；它与首验 rotor A/B 无直接依赖。
@@ -267,8 +272,9 @@ BMI088 的轴向、单位、正负号，并记录 raw -> AHRS -> Gimbal -> FOLLO
 
 ### T5：MotionFrame 影子链路
 
-增加底盘 BMI 配置、10 ms 的 0x321 帧和两个基础 Topic，但 `rotor_weight` 保持 0。使用 CAN
-回放覆盖丢帧、重复序号、序号回绕、BMI 停更、模式切换和双板断链。
+增加底盘 BMI 配置、10 ms 的 0x321 帧和两个基础 Topic，但
+`rotor_ff_enabled=false`。使用 CAN 回放验证帧布局、数值符号、显式无效帧、模式切换
+和既有双板离线路径；序号不参与控制判断。
 
 ### T6：ROTOR 速度前馈
 
@@ -298,8 +304,8 @@ omni_infantry_4, radar, sentry, wheel_leg
 ## 8. Ozone 指标与验收门限
 
 建议采集的真实成员包括：`dt_`、目标角/目标速度、Euler、云台 gyro、电机反馈、
-`chassis_gyro_z_`、`chassis_alpha_z_`、motion age、`rotor_weight_`、各项 Yaw
-扭矩、Pitch 最终扭矩、输出饱和状态和在线状态。
+`chassis_gyro_z_`、`chassis_alpha_z_`、`rotor_ff_active_`、各项 Yaw 扭矩、Pitch
+最终扭矩、输出饱和状态和在线状态。
 
 所有 A/B 使用相同供电、温度、功率限制、动作轨迹和重复次数，交替执行 A/B，离线
 计算角度误差 RMS/p95、速度误差、扭矩 RMS/峰值、相位延迟、饱和比例和丢帧统计。
@@ -311,7 +317,7 @@ omni_infantry_4, radar, sentry, wheel_leg
 | 控制周期 | 首验只报告 p50/p95/p99 和 `dt > 4 ms` 次数；`dt <= 0.5 ms` 或 `dt > 20 ms` 触发数值保护 |
 | 控制执行时间 | 先观测，p99 < 1 ms 作为后续目标，不作为首轮阻断门限 |
 | 云台 IMU age | <= 20 ms 正常；20--50 ms 标记 stale 并停用惯量/加速度前馈；> 50 ms 触发硬保护 |
-| 底盘 MotionFrame | 标称 10 ms；接收间隔 p95 <= 20 ms 为观测目标；age <= 30 ms 满权重，80 ms 归零，100 ms 硬离线 |
+| 底盘 MotionFrame | 标称 10 ms；不设置独立 age、渐退或硬离线门限，复用既有 DualBoard 在线语义 |
 | 电机反馈 | 50 ms 记警告；150 ms 判硬离线，且不得配置超过 200 ms |
 | 人工速度前馈 | 动态角误差 RMS 下降至少 15%，超调增加不超过 10% |
 | ROTOR 速度前馈 | Yaw 误差 RMS 下降至少 20%，非 ROTOR 指标恶化不超过 5% |
