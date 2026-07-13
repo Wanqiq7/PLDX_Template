@@ -38,12 +38,18 @@ Assert-Contains $dualBoardHeader 'struct __attribute__\(\(packed\)\) ControlFram
 Assert-Contains $dualBoardHeader 'struct __attribute__\(\(packed\)\) AngleFrame' 'DualBoard must use a fixed gimbal angle frame.'
 Assert-Contains $dualBoardHeader 'struct __attribute__\(\(packed\)\) AttitudeFrame' 'DualBoard must use a fixed attitude frame.'
 Assert-Contains $dualBoardHeader 'struct __attribute__\(\(packed\)\) LauncherFeedbackFrame' 'DualBoard must use a compact launcher feedback frame.'
+Assert-Contains $dualBoardHeader 'struct __attribute__\(\(packed\)\) MotionFrame' 'DualBoard MotionFrame is missing.'
 Assert-Contains $dualBoardHeader 'CONTROL_PERIOD_MS = 10' 'DualBoard control frame period must be 10 ms.'
+Assert-Contains $dualBoardHeader 'ANGLE_ID_OFFSET = 0x10U' 'DualBoard chassis tx_id 0x311 plus motion offset 0x10 must produce sentry CAN ID 0x321.'
 Assert-Contains $dualBoardHeader 'LAUNCHER_FEEDBACK_PERIOD_MS = 20' 'DualBoard launcher feedback frame period must be 20 ms.'
 Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(ControlFrame\) == 8' 'DualBoard control frame must stay exactly one classic CAN frame.'
 Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(AngleFrame\) == 8' 'DualBoard angle frame must stay exactly one classic CAN frame.'
 Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(AttitudeFrame\) == 8' 'DualBoard attitude frame must stay exactly one classic CAN frame.'
 Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(LauncherFeedbackFrame\) == 8' 'DualBoard launcher feedback frame must stay exactly one classic CAN frame.'
+Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(MotionFrame\) == 8' 'DualBoard MotionFrame must stay exactly one classic CAN frame.'
+Assert-Contains $dualBoardHeader 'GYRO_SCALE = 900\.0f' 'DualBoard gyro scale is missing.'
+Assert-Contains $dualBoardHeader 'chassis_gyro_z' 'DualBoard chassis gyro z Topic is missing.'
+Assert-NotContains $dualBoardHeader 'chassis_alpha_z' 'DualBoard must not add chassis angular acceleration.'
 Assert-Contains $dualBoardHeader 'PublishSafeChassisState' 'DualBoard must publish a zero command when the link is offline.'
 Assert-Contains $dualBoardHeader 'ForceRemoteMode\(static_cast<uint32_t>\(ChassisMode::RELAX\)\)' 'DualBoard must force chassis RELAX on link timeout.'
 Assert-Contains $dualBoardHeader 'SendClassicFrame' 'DualBoard must centralize CAN send error handling.'
@@ -82,6 +88,14 @@ Assert-Contains $chassisYaml 'rx_id: 0x312' 'Chassis YAML must use default chass
 Assert-Contains $chassisYaml 'chassis: ''@&chassis''' 'Chassis YAML must pass the chassis module to DualBoard.'
 Assert-Contains $chassisYaml 'name: Chassis' 'Chassis YAML must instantiate Chassis.'
 Assert-Contains $chassisYaml 'name: Referee' 'Chassis YAML must instantiate Referee.'
+Assert-Contains $chassisYaml 'name: BMI088' 'Chassis YAML must instantiate BMI088.'
+Assert-Contains $chassisYaml 'gyro_topic_name: chassis_gyro' 'Chassis BMI088 gyro Topic is missing.'
+Assert-Contains $chassisYaml 'accl_topic_name: chassis_accl' 'Chassis BMI088 accel Topic is missing.'
+$bmi088BlockLine = (Select-String -Path $chassisYaml -Pattern '^- id: BMI088_0$' -CaseSensitive).LineNumber
+$dualBoardBlockLine = (Select-String -Path $chassisYaml -Pattern '^- id: dual_board$' -CaseSensitive).LineNumber
+if ($null -eq $bmi088BlockLine -or $null -eq $dualBoardBlockLine -or $bmi088BlockLine -ge $dualBoardBlockLine) {
+  throw 'Chassis BMI088 must be constructed before DualBoard subscribes to chassis_gyro.'
+}
 Assert-NotContains $chassisYaml 'name: DR16' 'Chassis YAML must not instantiate DR16.'
 Assert-NotContains $chassisYaml 'name: Gimbal' 'Chassis YAML must not instantiate Gimbal.'
 Assert-NotContains $chassisYaml 'name: InfantryLauncher' 'Chassis YAML must not instantiate InfantryLauncher.'

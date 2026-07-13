@@ -276,6 +276,30 @@ modules:
     thread_priority: LibXR::Thread::Priority::HIGH
   template_args:
     ChassisType: Omni
+- id: BMI088_0
+  name: BMI088
+  constructor_args:
+    gyro_freq: BMI088::GyroFreq::GYRO_1000HZ_BW116HZ
+    accl_freq: BMI088::AcclFreq::ACCL_800HZ
+    gyro_range: BMI088::GyroRange::DEG_2000DPS
+    accl_range: BMI088::AcclRange::ACCL_24G
+    rotation:
+      w: 1.0
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    pid_param:
+      k: 1.0
+      p: 0.35
+      i: 0.0
+      d: 0.0
+      i_limit: 0.0
+      out_limit: 0.0
+      cycle: false
+    gyro_topic_name: chassis_gyro
+    accl_topic_name: chassis_accl
+    target_temperature: 45
+    task_stack_depth: 1536
 - id: dual_board
   name: DualBoard
   template_args:
