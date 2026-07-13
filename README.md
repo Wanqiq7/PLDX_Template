@@ -2,6 +2,19 @@
 
 BSP Package for development board C.
 
+## RM2024 Chassis Power Control
+
+Chassis modules submit normal/boost intent, while PowerControl centrally owns
+one power budget. Shared motor-group allocation covers all configured M3508 and
+GM6020 motors. Referee/supercapacitor validity drives conservative degradation
+with immediate recovery from the current LibXR PD result. SuperPower provides
+centralized freshness for the independent referee power-limit and energy-buffer
+fields. PowerControl intentionally keeps the last valid `0x0201` limit after that
+field becomes stale, and each measured supercapacitor power sample is consumed
+by RLS at most once. The implementation remains header-only and keeps the
+original two-file shape: `RLS.hpp` and `PowerControl.hpp`; tuning defaults stay
+internal.
+
 ## Build in Terminal
 
 ### Windows

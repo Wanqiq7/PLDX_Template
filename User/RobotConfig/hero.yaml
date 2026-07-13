@@ -291,9 +291,8 @@ modules:
   name: PowerControl
   constructor_args:
     superpower: '@&super_power'
-    is_helm: false
     chassis_static_power_loss: 8.0
-    motor_count_3508: 4
+    motor_count_3508: 5
     motor_count_6020: 0
 - id: track_motor
   name: RMMotor

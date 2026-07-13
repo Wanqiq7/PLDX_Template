@@ -47,7 +47,6 @@ modules:
   name: PowerControl
   constructor_args:
     superpower: '@&super_power'
-    is_helm: false
     chassis_static_power_loss: 5.5
     motor_count_3508: 4
     motor_count_6020: 0
