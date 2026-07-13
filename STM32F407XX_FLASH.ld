@@ -177,6 +177,8 @@ SECTIONS
     _sdata = .;        /* create a global symbol at data start */
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
+    *(.got)            /* Global offset table must be initialized from FLASH */
+    *(.got.*)
     *(.RamFunc)        /* .RamFunc sections */
     *(.RamFunc*)       /* .RamFunc* sections */
 
