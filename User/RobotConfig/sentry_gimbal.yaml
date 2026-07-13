@@ -126,6 +126,7 @@ modules:
     reverse_flag: true
     referee: '@nullptr'
     thread_priority: LibXR::Thread::Priority::HIGH
+    rotor_ff_enabled: false
 - id: dual_board
   name: DualBoard
   template_args:
