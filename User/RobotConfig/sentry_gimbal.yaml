@@ -92,7 +92,7 @@ modules:
       i: 0.0
       d: 0.0
       i_limit: 0.0
-      out_limit: 0.0
+      out_limit: 2.223
       cycle: false
     pid_pit_angle:
       k: 1
@@ -108,7 +108,7 @@ modules:
       i: 0.0
       d: 0.0
       i_limit: 0.0
-      out_limit: 0
+      out_limit: 10.0
       cycle: false
     motor_pitch: '@&motor_pit'
     motor_yaw: '@&motor_yaw'
