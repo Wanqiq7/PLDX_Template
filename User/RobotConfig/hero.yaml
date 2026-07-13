@@ -321,12 +321,12 @@ modules:
       wheel_radius: 0.07619
       wheel_to_center: 0.2825
       gravity_height: 0.0
-      reductionratio: 19.2032
+      reduction_ratio: 19.2032
       wheel_resistance: 0.0
       error_compensation: 0.0
       gravity: 83.692
       rotor_speed_scale: 1.0
-    pid_follow:
+    pid_follow_:
       k: 1.0
       p: 30.0
       i: 0.0
@@ -358,7 +358,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_angle_0_:
+    pid_wheel_speed_0_:
       k: 1.0
       p: 0.01
       i: 0.0009
@@ -366,7 +366,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.85
       cycle: false
-    pid_wheel_angle_1_:
+    pid_wheel_speed_1_:
       k: 1.0
       p: 0.5
       i: 0.0
@@ -374,7 +374,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_angle_2_:
+    pid_wheel_speed_2_:
       k: 1.0
       p: 0.5
       i: 0.0
@@ -382,7 +382,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_angle_3_:
+    pid_wheel_speed_3_:
       k: 1.0
       p: 0.5
       i: 0.0

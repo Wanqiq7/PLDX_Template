@@ -184,7 +184,7 @@ modules:
       wheel_radius: 0.065
       wheel_to_center: 0.26
       gravity_height: 0.20
-      reductionratio: 15.7647
+      reduction_ratio: 15.7647
       wheel_resistance: 0.0
       error_compensation: 0.0
       gravity: 230
@@ -220,7 +220,7 @@ modules:
       out_limit: 0.0
       cycle: false
     pid_omega_:
-      k: 1.0
+      k: 0.26
       p: 300.0
       i: 0.0
       d: 0.0
