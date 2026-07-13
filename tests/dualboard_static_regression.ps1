@@ -50,6 +50,22 @@ Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(MotionFrame\) == 8' 'Du
 Assert-Contains $dualBoardHeader 'GYRO_SCALE = 900\.0f' 'DualBoard gyro scale is missing.'
 Assert-Contains $dualBoardHeader 'chassis_gyro_z' 'DualBoard chassis gyro z Topic is missing.'
 Assert-NotContains $dualBoardHeader 'chassis_alpha_z' 'DualBoard must not add chassis angular acceleration.'
+$dualBoardLines = Get-Content -Path $dualBoardHeader
+$motionFrameStartLine = (Select-String -Path $dualBoardHeader -Pattern '^  void HandleMotionFrame\(' -CaseSensitive).LineNumber
+$controlFrameStartLine = (Select-String -Path $dualBoardHeader -Pattern '^  void HandleControlFrame\(' -CaseSensitive).LineNumber
+if ($null -eq $motionFrameStartLine -or $null -eq $controlFrameStartLine -or $motionFrameStartLine -ge $controlFrameStartLine) {
+  throw 'DualBoard MotionFrame handler boundaries are missing.'
+}
+$motionFrameBody = [string]::Join("`n", $dualBoardLines[($motionFrameStartLine - 1)..($controlFrameStartLine - 2)])
+if ($motionFrameBody -notmatch 'last_rx_time_ms_\s*=\s*static_cast<uint32_t>\(\s*LibXR::Timebase::GetMilliseconds\(\)\s*\)') {
+  throw 'A received MotionFrame must refresh the existing DualBoard link timestamp.'
+}
+if ($motionFrameBody -notmatch 'online_\s*=\s*true') {
+  throw 'A received MotionFrame must establish the existing DualBoard online state.'
+}
+if ($motionFrameBody -notmatch 'safe_state_published_\s*=\s*false') {
+  throw 'A received MotionFrame must re-arm the existing DualBoard offline safe state.'
+}
 Assert-Contains $dualBoardHeader 'PublishSafeChassisState' 'DualBoard must publish a zero command when the link is offline.'
 Assert-Contains $dualBoardHeader 'ForceRemoteMode\(static_cast<uint32_t>\(ChassisMode::RELAX\)\)' 'DualBoard must force chassis RELAX on link timeout.'
 Assert-Contains $dualBoardHeader 'SendClassicFrame' 'DualBoard must centralize CAN send error handling.'
