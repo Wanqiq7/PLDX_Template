@@ -63,6 +63,19 @@ prepend_path() {
   esac
 }
 
+resolve_local_python_tools() {
+  local tool_root="${REPO_ROOT}/.tooling/python"
+
+  [[ -d "${tool_root}" ]] || return 0
+
+  if [[ -n "${PYTHONPATH:-}" ]]; then
+    export PYTHONPATH="${tool_root}:${PYTHONPATH}"
+  else
+    export PYTHONPATH="${tool_root}"
+  fi
+  prepend_path "${tool_root}/bin"
+}
+
 cube_cmake_arch_candidates() {
   case "$(uname -m)" in
     x86_64|amd64)
@@ -278,6 +291,27 @@ resolve_stm32_toolchains() {
   prepend_path "${CLANG_GCC_CMSIS_COMPILER:-}/bin"
 }
 
+resolve_ninja() {
+  local bundle_root
+  local ninja_root=""
+
+  if command -v ninja >/dev/null 2>&1; then
+    return 0
+  fi
+
+  while IFS= read -r bundle_root; do
+    ninja_root="$(find_latest_subdir "${bundle_root}/ninja" || true)"
+    if [[ -n "${ninja_root}" && -x "${ninja_root}/bin/ninja" ]]; then
+      prepend_path "${ninja_root}/bin"
+      echo "[preflight] ninja not in PATH; using ${ninja_root}/bin/ninja."
+      return 0
+    fi
+  done < <(find_stm32_bundle_roots)
+
+  echo "Error: ninja not found in PATH or STM32 Cube bundle directories." >&2
+  return 1
+}
+
 preset_build_type() {
   case "$1" in
     debug)
@@ -400,6 +434,8 @@ if [[ ! -f "${CONFIG_PATH}" ]]; then
   exit 1
 fi
 
+resolve_local_python_tools
+
 if ! command -v xrobot_gen_main >/dev/null 2>&1; then
   echo "Error: xrobot_gen_main not found in PATH." >&2
   exit 1
@@ -416,6 +452,10 @@ if ! resolve_cube_cmake; then
 fi
 
 resolve_stm32_toolchains
+
+if ! resolve_ninja; then
+  exit 1
+fi
 
 if [[ -z "${GCC_TOOLCHAIN_ROOT:-}" || ! -d "${GCC_TOOLCHAIN_ROOT}" ]]; then
   echo "Error: GCC_TOOLCHAIN_ROOT is not configured and could not be auto-detected." >&2

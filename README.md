@@ -20,13 +20,12 @@ internal.
 ### Windows
 
 ```bash
-git clone https://github.com/QDU-Robomaster/bsp-dev-c
-cd bsp-dev-c
+git clone https://github.com/Wanqiq7/PLDX_Template.git
+cd PLDX_Template
 git submodule update --init --recursive
 pip install libxr xrobot
 xr_cubemx_cfg -d ./ -c --xrobot
-xrobot_src_man create-sources
-xrobot_init_mod --config https://raw.githubusercontent.com/QDU-Robomaster/dev-c-robots/refs/heads/main/test.yaml --dir .\Modules\
+xrobot_init_mod
 xrobot_setup
 $env:GCC_TOOLCHAIN_ROOT = "C:\Users\$env:USERNAME\AppData\Local\stm32cube\bundles\gnu-tools-for-stm32\${版本号}\bin"
 $env:CLANG_GCC_CMSIS_COMPILER = "C:\Users\$env:USERNAME\AppData\Local\stm32cube\bundles\st-arm-clang\${版本号}"
@@ -38,17 +37,16 @@ ls build/
 ### Linux
 
 ```bash
-git clone https://github.com/QDU-Robomaster/bsp-dev-c
-cd bsp-dev-c
+git clone https://github.com/Wanqiq7/PLDX_Template.git
+cd PLDX_Template
 git submodule update --init --recursive
-pip install libxr xrobot
+tools/install_stm32_toolchains.sh
+tools/bootstrap_tooling.sh
+export PATH="$PWD/.tooling/python/bin:$PATH"
+export PYTHONPATH="$PWD/.tooling/python:${PYTHONPATH:-}"
 xr_cubemx_cfg -d ./ -c --xrobot
-xrobot_src_man create-sources
-xrobot_init_mod --config https://raw.githubusercontent.com/QDU-Robomaster/dev-c-robots/refs/heads/main/test.yaml --dir ./Modules
+xrobot_init_mod
 xrobot_setup
-export GCC_TOOLCHAIN_ROOT=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin
-export CLANG_GCC_CMSIS_COMPILER=/opt/st-arm-clang
-cmake . -DCMAKE_TOOLCHAIN_FILE:STRING=cmake/starm-clang.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Bbuild -G Ninja
-cmake --build build
+tools/build.sh -c User/RobotConfig/omni_infantry_3.yaml -b build/debug
 ls build/
 ```

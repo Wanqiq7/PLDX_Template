@@ -6,6 +6,11 @@ build.ninja
 cmake_install.cmake
 compile_commands.json
 .cache/**
+.tooling/
+.venv/
+.venv-clang-format/
+.superpowers/
+tmp/
 build/**
 DevC.jdebug.user
 .config.json
