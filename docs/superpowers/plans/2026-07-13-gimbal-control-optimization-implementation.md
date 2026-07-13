@@ -20,6 +20,7 @@
 - Keep `LibXR::Thread::Sleep(2)`; use measured `dt` with `0.5 ms < dt <= 20 ms` numerical protection.
 - IMU has one 50 ms hard timeout. Motors implement driver-level freshness; Gimbal does not duplicate motor timestamps.
 - ROTOR feedforward is fully enabled for the entire requested ROTOR mode and immediately disabled on exit. Do not add fade, age weighting, or MotionFrame-specific timeout.
+- MotionFrame refreshes the existing DualBoard link timestamp/online state so the existing `offline_timeout_ms` path can publish zero gyro; do not add a second timestamp or state machine.
 - Do not implement chassis angular-acceleration compensation, `chassis_alpha_z`, `rotor_accel_k`, derivative filters, or extra feedforward limits.
 - Add only one Gimbal constructor option: `rotor_ff_enabled`, default `false`.
 - Add only one new inter-module Topic: `float chassis_gyro_z`. Reuse `uint32_t dualboard_chassis_mode`.
@@ -484,7 +485,7 @@ CONTROL_PERIOD_MS = 10
 FindOrCreate<float>("chassis_gyro_z", nullptr, false)
 ```
 
-It must forbid MotionFrame gyro X/Y, sequence, mode flags, `chassis_alpha_z`, and updates to `last_rx_time_ms_` inside `HandleMotionFrame()`.
+It must forbid MotionFrame gyro X/Y, sequence, mode flags, and `chassis_alpha_z`. `HandleMotionFrame()` must refresh the existing `last_rx_time_ms_`, set `online_ = true`, and clear `safe_state_published_` so the existing full-link timeout remains reachable on sentry hardware without a launcher-feedback heartbeat.
 
 Expected RED command:
 
@@ -528,10 +529,12 @@ forbid 'chassis_alpha_z' 'chassis angular acceleration'
 forbid 'mode_and_flags' 'mode payload'
 
 motion_body="$(sed -n '/void HandleMotionFrame/,/^  }/p' "$HEADER")"
-if rg -q 'last_rx_time_ms_|online_|safe_state_published_' <<<"$motion_body"; then
-  echo 'forbidden: MotionFrame refreshes DualBoard online state' >&2
-  exit 1
-fi
+need_in "$motion_body" 'last_rx_time_ms_ =' \
+  'MotionFrame refreshes the existing DualBoard link timestamp'
+need_in "$motion_body" 'online_ = true' \
+  'MotionFrame establishes the existing DualBoard online state'
+need_in "$motion_body" 'safe_state_published_ = false' \
+  'MotionFrame re-arms the existing DualBoard offline safe state'
 
 echo 'PASS: DualBoard motion static regression checks'
 ```
@@ -557,7 +560,7 @@ LibXR::Topic(LibXR::Topic::FindOrCreate<float>(
     "chassis_gyro_z", nullptr, false));
 ```
 
-Do not use the existing `CreateTopic()` helper for this Topic because that helper forces `multi_publisher=true`. MotionFrame receive must not modify `last_rx_time_ms_`, `online_`, or `safe_state_published_`. Existing full-link offline handling also publishes zero gyro.
+Do not use the existing `CreateTopic()` helper for this Topic because that helper forces `multi_publisher=true`. MotionFrame receive refreshes the existing `last_rx_time_ms_`, `online_`, and `safe_state_published_`; it must not add MotionFrame-specific freshness state. Existing full-link offline handling publishes zero gyro.
 
 - [ ] **Step 4: Add the bottom-board BMI088 configuration**
 
@@ -780,7 +783,7 @@ no Pitch gravity formula/parameter change
 no angular-acceleration compensation
 no MotionFrame age/fade/offline state machine
 no Telemetry or rotor_ff_active_ member
-MotionFrame receive does not refresh DualBoard online_
+MotionFrame receive refreshes the existing DualBoard online state without adding another freshness state machine
 PID feedforward is zeroed before Reset
 SetFeedForward precedes Calculate
 only rotor_ff_enabled is a new Gimbal constructor option

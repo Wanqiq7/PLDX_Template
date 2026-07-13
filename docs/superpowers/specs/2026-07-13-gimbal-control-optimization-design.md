@@ -214,9 +214,10 @@ uint8 reserved[5]
 沿用 `data_mutex_`，不引入新的并发抽象。
 
 10 ms 周期与 `DualBoard` 现有 `CONTROL_PERIOD_MS` 一致，不额外增加 5 ms 发送任务。
-MotionFrame 的接收不能刷新既有 `last_rx_time_ms_`、`online_` 或
-`safe_state_published_`；它不能单独把双板链路维持在线。云台端收到显式无效帧时发布
-零 gyro，完整双板链路进入既有离线路径时也发布零 gyro。
+MotionFrame 的接收复用既有 `last_rx_time_ms_`、`online_` 和
+`safe_state_published_`，将底盘板的 10 ms 帧作为现有双板链路心跳；不增加
+MotionFrame 专用时间戳或第二套离线状态机。云台端收到显式无效帧时发布零 gyro，
+MotionFrame 停止并超过既有 `offline_timeout_ms` 时也沿现有离线路径发布零 gyro。
 
 ### 5.3 直接使用与已接受风险
 
@@ -226,8 +227,8 @@ Gimbal 收到有效 MotionFrame 后直接保存最新 `chassis_gyro_z_`。ROTOR 
 发布零 gyro。
 
 该简化方案明确接受一个残余风险：如果只有 MotionFrame 停更，而其他 DualBoard
-反馈帧仍让整条双板链路保持在线，Gimbal 将继续使用最后一次 `chassis_gyro_z_`。
-首验不为这一局部停更场景增加第二套超时状态机。
+反馈帧仍持续刷新同一条链路时间戳，Gimbal 将继续使用最后一次
+`chassis_gyro_z_`。首验不为这一局部停更场景增加第二套超时状态机。
 
 MotionFrame 不携带序号、模式或源时间戳。帧布局、CAN ID、发送周期和数值符号通过
 现有静态回归、CAN analyzer 和 Ozone 台架检查；不新增 CAN replay 框架。
