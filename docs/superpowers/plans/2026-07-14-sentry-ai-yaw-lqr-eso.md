@@ -1280,7 +1280,7 @@ Do not alter existing PID, Pitch, inertia, patrol, motor, HostData, or DualBoard
 - [ ] **Step 3: Generate/build and verify emitted aggregate order**
 
 ```bash
-tools/buildgimbal.sh --skip-format
+bash tools/buildgimbal.sh --skip-format
 python3 Modules/Gimbal/tests/gimbal_config_order_regression.py \
   --header Modules/Gimbal/Gimbal.hpp \
   --algorithm Modules/Gimbal/YawLqrEso.hpp \
@@ -1348,8 +1348,8 @@ Expected: focused files pass. If global check fails only on unrelated baseline f
 - [ ] **Step 3: Build all affected configurations sequentially**
 
 ```bash
-tools/buildgimbal.sh --skip-format
-tools/buildchassis.sh --skip-format
+bash tools/buildgimbal.sh --skip-format
+bash tools/buildchassis.sh --skip-format
 tools/build.sh --skip-format -c User/RobotConfig/sentry.yaml -b build/sentry
 tools/build.sh --skip-format -c User/RobotConfig/omni_infantry_3.yaml \
   -b build/omni-infantry-3
