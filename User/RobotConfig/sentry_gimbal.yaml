@@ -156,6 +156,8 @@ modules:
       lqi_enable: false
       torque_bias_enable: false
       torque_slew_enable: true
+    euler_topic_name: gimbal_euler
+    gyro_topic_name: gimbal_gyro
 - id: dual_board
   name: DualBoard
   template_args:

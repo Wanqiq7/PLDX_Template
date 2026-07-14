@@ -167,6 +167,8 @@ modules:
     pit_reverse_flag: true
     referee: '@nullptr'
     thread_priority: LibXR::Thread::Priority::HIGH
+    euler_topic_name: ahrs_euler
+    gyro_topic_name: bmi088_gyro
 - id: launcher
   name: InfantryLauncher
   constructor_args:
