@@ -88,6 +88,11 @@ For deliberate parity with the current `Referee` implementation:
 - `OnMonitor()` is empty;
 - the receive loop has no additional sleep.
 
+The module also registers one 50 ms task with LibXR's global `Timer`. This is
+not a second module-owned thread: LibXR runs all timer tasks from its shared
+timer thread. The task is required because a blocking UART payload read can
+otherwise delay chassis expiry by another full 50 ms read timeout.
+
 ## Wire Protocol
 
 Every frame uses the existing `pldx_ws` version 2 layout:
@@ -210,15 +215,21 @@ The rules are:
 - if no valid command has ever arrived, it first expires 50 ms after module
   startup;
 - while expired, the module publishes a zero `HostChassisTarget` every 50 ms;
-- freshness checks run on receive timeouts, receive error paths, header-search
-  iterations, and after completed frames, so noise and unrelated commands
-  cannot suppress zero output;
+- the periodic LibXR Timer task performs expiry and zero publication
+  independently of the blocking UART receive thread, so noise, partial frames,
+  and unrelated commands cannot delay zero output;
 - if `Publish()` is triggered by another command while the robot command is
   stale, it publishes zero rather than the cached old velocity;
 - receiving a new valid robot command immediately resumes normal publication.
 
 The cached full payload is not erased when stale. Only the control output is
 forced to zero.
+
+One mutex protects the last-valid-command timestamp and chassis publication.
+The timer holds it while publishing a stale zero, and the receive path uses the
+same mutex while marking a command fresh and publishing its velocity. This
+orders recovery against a concurrent timer callback so that a late stale-zero
+publication cannot overwrite a newly recovered command.
 
 `WsProtocol` does not inspect navigation mode. `HostData` feeds these values
 into CMD's AI source. Operator mode ignores the AI source; automatic mode uses
@@ -364,6 +375,8 @@ Hardware integration must confirm:
 
 - The single header will be longer, but its control flow matches the project's
   dominant module style and keeps extension localized.
+- The 50 ms freshness task allocates one LibXR Timer control block during
+  initialization and then reuses the framework's global timer thread.
 - The remaining-header UART read deliberately mirrors `Referee` and ignores
   its return code before CRC8 verification.
 - The thread-priority constructor argument deliberately remains unused while
