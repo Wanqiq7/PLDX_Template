@@ -127,6 +127,35 @@ modules:
     referee: '@nullptr'
     thread_priority: LibXR::Thread::Priority::HIGH
     rotor_ff_enabled: false
+    ai_yaw_lqr_eso_enable: true
+    yaw_lqr_eso:
+      j_kg_m2: 0.03
+      b_nms_rad: 0.0
+      k_theta: 1.0
+      k_omega: 1.0
+      k_i: 0.2
+      theta_integral_limit_rad_s: 0.5
+      tau_coulomb_nm: 0.05
+      coulomb_smooth_rad_s: 0.2
+      eso_bandwidth_rad_s: 30.0
+      eso_comp_gain: 1.0
+      eso_comp_limit_nm: 0.3
+      eso_omega_gate_rad_s: 5.0
+      eso_alpha_gate_rad_s2: 50.0
+      tau_bias_ki: 0.5
+      tau_bias_limit_nm: 0.15
+      tau_meas_lpf_alpha: 0.1
+      theta_deadband_rad: 0.0
+      torque_soft_limit_nm: 2.0
+      torque_min_nm: -2.223
+      torque_max_nm: 2.223
+      torque_slew_rate_nm_s: 1000.0
+      eso_enable: true
+      eso_comp_enable: false
+      coulomb_enable: false
+      lqi_enable: false
+      torque_bias_enable: false
+      torque_slew_enable: true
 - id: dual_board
   name: DualBoard
   template_args:
