@@ -126,7 +126,7 @@ inline YawLqrEso::Config base_yaw_config() {
 }
 ```
 
-Create `yaw_lqr_eso_test.cpp` with `test_config_validation()` and a reset/zero test:
+Create `yaw_lqr_eso_test.cpp` with config validation only:
 
 ```cpp
 #include <limits>
@@ -146,18 +146,8 @@ static void test_config_validation() {
   CHECK(!YawLqrEso::ValidateConfig(cfg));
 }
 
-static void test_reset_and_zero_state() {
-  YawLqrEso ctrl; const auto CONFIG = base_yaw_config();
-  ctrl.Reset(0.4f, 0.0f, 0.0f);
-  const auto OUTPUT = ctrl.Calculate(
-      CONFIG, {.theta_rad=0.4f},
-      {.theta_rad=0.4f, .omega_rad_s=0.0f, .tau_meas_nm=0.0f,
-       .valid=true, .torque_measurement_valid=true}, 0.002f);
-  CHECK(OUTPUT.valid); CHECK_NEAR(OUTPUT.tau_cmd_nm, 0.0f, 1.0e-6f);
-}
-
 int main() {
-  test_config_validation(); test_reset_and_zero_state();
+  test_config_validation();
   return yaw_test_failures == 0 ? 0 : 1;
 }
 ```
@@ -256,7 +246,7 @@ class YawLqrEso final {
 
 Private state groups are: unwrap raw/continuous angle; `z1/z2/z3` plus ready/fresh; LQI integral; measured-torque LPF/bias; distinct last-applied and slew-anchor values; six prior switch values. Constants are `MIN_J_KG_M2=1e-6f`, `MIN_DT_S=0.0005f`, `MAX_DT_S=0.02f`, and `EPSILON=1e-6f`.
 
-Implement `ValidateConfig()` with finite checks, `J>MIN_J`, nonnegative base gains, and switch-dependent optional constraints. For Task 1 only, `Calculate()` returns valid zero for finite zero-error input and invalid otherwise; Task 2 replaces it with the complete law.
+Implement `ValidateConfig()` with finite checks, `J>MIN_J`, nonnegative base gains, and switch-dependent optional constraints. Keep `Reset()`, `Calculate()`, and `CommitAppliedTorque()` declared but undefined in Task 1 because no Task 1 test calls them; Task 2 begins with failing link/behavior tests and supplies their first real implementation. Do not commit a stub controller body.
 
 The validation predicate is exact:
 
