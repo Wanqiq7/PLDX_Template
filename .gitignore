@@ -18,4 +18,4 @@ DevC.jdebug.user
 User/xrobot_main.hpp
 .Data/**
 # Module source directories are maintained separately and should not be tracked
-Modules/*/
+Modules/*
