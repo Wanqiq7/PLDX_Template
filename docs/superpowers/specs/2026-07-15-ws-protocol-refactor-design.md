@@ -18,7 +18,7 @@ The module must:
 - publish its chassis velocity through the existing `HostData` path;
 - continuously publish zero chassis velocity when navigation commands become
   stale;
-- support all MCU-to-PC command types currently consumed by `pldx_ws`;
+- support all MCU-to-PC command types currently defined by `pldx_ws`;
 - make adding a command a small enum, payload, switch case, and wrapper change;
 - remain the only owner of `uart_ext_controller` on the sentry gimbal board.
 
@@ -88,10 +88,13 @@ For deliberate parity with the current `Referee` implementation:
 - `OnMonitor()` is empty;
 - the receive loop has no additional sleep.
 
-The module also registers one 50 ms task with LibXR's global `Timer`. This is
-not a second module-owned thread: LibXR runs all timer tasks from its shared
-timer thread. The task is required because a blocking UART payload read can
-otherwise delay chassis expiry by another full 50 ms read timeout.
+The module also registers one 1 ms check task with LibXR's global `Timer`.
+This is not a second module-owned thread: LibXR runs all timer tasks from its
+shared timer thread. The task evaluates the 50 ms command deadline on each
+tick, while stale zero publications remain limited to one every 50 ms. The
+short check interval is required because a 50 ms periodic check can miss a
+just-arrived command by one phase and delay first zero output until almost
+100 ms after the last valid command.
 
 ## Wire Protocol
 
@@ -126,13 +129,16 @@ integration.
 
 ## Receive Model
 
-The receive thread follows this high-level loop:
+The receive thread and global timer task have separate high-level loops:
 
 ```text
-FindHeader()
-ParseData()
-if parse succeeded: Publish()
-CheckChassisCommandFreshness()
+RX thread:
+  FindHeader()
+  ParseData()
+  if parse succeeded: Publish()
+
+Global Timer task every 1 ms:
+  CheckChassisCommandFreshness()
 ```
 
 ### Header Search
@@ -214,7 +220,10 @@ The rules are:
 - the command expires 50 ms after that timestamp;
 - if no valid command has ever arrived, it first expires 50 ms after module
   startup;
-- while expired, the module publishes a zero `HostChassisTarget` every 50 ms;
+- the 1 ms Timer task observes expiry on the first scheduler tick at or after
+  the 50 ms deadline, rather than waiting for the phase of a 50 ms check;
+- while expired, the module publishes a zero `HostChassisTarget` immediately
+  on that first expired check and every 50 ms thereafter;
 - the periodic LibXR Timer task performs expiry and zero publication
   independently of the blocking UART receive thread, so noise, partial frames,
   and unrelated commands cannot delay zero output;
@@ -225,11 +234,12 @@ The rules are:
 The cached full payload is not erased when stale. Only the control output is
 forced to zero.
 
-One mutex protects the last-valid-command timestamp and chassis publication.
-The timer holds it while publishing a stale zero, and the receive path uses the
-same mutex while marking a command fresh and publishing its velocity. This
-orders recovery against a concurrent timer callback so that a late stale-zero
-publication cannot overwrite a newly recovered command.
+One mutex protects the startup timestamp, last-valid-command timestamp,
+last-zero-publication timestamp, and chassis publication. The timer holds it
+while publishing a stale zero, and the receive path uses the same mutex while
+marking a command fresh and publishing its velocity. This orders recovery
+against a concurrent timer callback so that a late stale-zero publication
+cannot overwrite a newly recovered command.
 
 `WsProtocol` does not inspect navigation mode. `HostData` feeds these values
 into CMD's AI source. Operator mode ignores the AI source; automatic mode uses
@@ -243,7 +253,7 @@ would prevent the chassis board's 100 ms dual-board offline guard from firing.
 
 ## Transmit Model
 
-`TxCommandID` covers every MCU-to-PC command currently consumed by
+`TxCommandID` covers every MCU-to-PC command currently defined by
 `pldx_ws`:
 
 | Value | Command |
@@ -291,6 +301,21 @@ only the business data substructure. They read `LibXR::Timebase`, add the
 The module does not retry, queue, schedule, or rate-limit transmissions.
 Callers own transmission frequency. The mutex only prevents concurrent callers
 from interleaving frames in the shared TX buffer.
+
+### UART Transmit Capacity
+
+The raw API's 255-byte payload produces a 261-byte frame. LibXR's STM32 UART
+driver splits the configured TX backing storage into two equal DMA blocks and
+uses one half as the write-port byte queue. The existing USART6 backing size of
+512 bytes therefore exposes only 256 bytes and would return
+`LibXR::ErrorCode::FULL` for a maximum frame.
+
+`User/libxr_config.yaml` and the generated `User/app_main.cpp` hardware map
+increase the USART6 TX backing storage to 528 bytes. This is the smallest valid
+LibXR double-buffer size that provides at least 261 bytes per half while
+remaining divisible by `2 * alignof(size_t)` on the target; each half is 264
+bytes. The generated hardware-map edit is committed separately from functional
+configuration changes.
 
 Adding a transmit command requires:
 
@@ -340,6 +365,8 @@ Implementation changes are limited to:
 - modify `Modules/WsProtocol/WsProtocol.hpp`;
 - modify `Modules/WsProtocol/README.md`;
 - delete `Modules/WsProtocol/WsProtocolParser.hpp`;
+- modify `User/libxr_config.yaml`;
+- modify generated `User/app_main.cpp` in a separate commit;
 - modify `User/RobotConfig/sentry_gimbal.yaml`;
 - modify `User/RobotConfig/sentry.yaml`;
 - delete `tests/ws_protocol_test.cpp`;
@@ -369,14 +396,20 @@ Hardware integration must confirm:
 - 50 ms without a valid robot command produces continuous zero velocity;
 - other traffic and corrupt frames do not preserve stale velocity;
 - valid navigation resumes immediately after link recovery;
-- every named MCU-to-PC send method is decoded by the unchanged `pldx_ws`.
+- every named MCU-to-PC send method produces the ID, length, CRC, timestamp,
+  and payload layout defined by the unchanged `pldx_ws`; implemented
+  `pldx_ws` handlers decode their fields, while the currently stubbed
+  `PID_DEBUG` handler is validated by raw serial capture;
+- a raw 255-byte payload is transmitted as one 261-byte frame without
+  `LibXR::ErrorCode::FULL`.
 
 ## Accepted Trade-Offs
 
 - The single header will be longer, but its control flow matches the project's
   dominant module style and keeps extension localized.
-- The 50 ms freshness task allocates one LibXR Timer control block during
-  initialization and then reuses the framework's global timer thread.
+- The 1 ms freshness-check task allocates one LibXR Timer control block during
+  initialization and then reuses the framework's global timer thread. It
+  publishes only at the approved 50 ms stale-output cadence.
 - The remaining-header UART read deliberately mirrors `Referee` and ignores
   its return code before CRC8 verification.
 - The thread-priority constructor argument deliberately remains unused while
