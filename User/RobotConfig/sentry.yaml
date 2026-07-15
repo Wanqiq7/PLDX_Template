@@ -158,6 +158,8 @@ modules:
     reverse_flag: true
     referee: '@&ref'
     thread_priority: LibXR::Thread::Priority::HIGH
+    euler_topic_name: gimbal_euler
+    gyro_topic_name: gimbal_gyro
 - id: motor_wheel_0
   name: RMMotor
   constructor_args:

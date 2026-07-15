@@ -379,6 +379,8 @@ modules:
     reverse_flag: true
     referee: '@&ref'
     thread_priority: LibXR::Thread::Priority::HIGH
+    euler_topic_name: gimbal_euler
+    gyro_topic_name: gimbal_gyro
 - id: launcher
   name: InfantryLauncher
   constructor_args:

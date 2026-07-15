@@ -477,6 +477,8 @@ modules:
     pit_reverse_flag: true
     referee: '@&ref'
     thread_priority: LibXR::Thread::Priority::MEDIUM
+    euler_topic_name: ahrs_euler
+    gyro_topic_name: bmi088_gyro
 - id: motor_small_pit
   name: RMMotor
   constructor_args:

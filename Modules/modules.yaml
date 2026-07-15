@@ -6,7 +6,7 @@ modules:
 - pldx/BuzzerAlarm
 - pldx/CMD
 - pldx/Chassis
-- pldx/Gimbal
+- pldx/Gimbal@codex/sentry-ai-yaw-lqr-eso
 - pldx/EventBinder
 - pldx/PowerControl
 - pldx/Referee
