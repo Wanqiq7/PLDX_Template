@@ -26,8 +26,8 @@ Options:
 Examples:
   tools/build.sh
   tools/build.sh -p release
-  tools/build.sh -c User/RobotConfig/omni_infantry.yaml -p relWithDebInfo
-  tools/build.sh -c User/RobotConfig/hero.yaml -b /home/leo/Documents/bsp-dev-c/build/custom
+  tools/build.sh -c User/RobotConfig/sentry_gimbal.yaml -p relWithDebInfo
+  tools/build.sh -c User/RobotConfig/sentry_chassis.yaml -b build/sentry_chassis
 EOF
 }
 

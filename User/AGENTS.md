@@ -14,15 +14,9 @@ User/
 ├── xrobot.yaml         # Default/minimal robot config (BlinkLED only)
 ├── libxr_config.yaml   # LibXR framework settings
 ├── flash_map.hpp       # Auto-generated flash sector table (STM32F407)
-└── RobotConfig/        # Robot-specific YAML presets
-    ├── aerial.yaml
-    ├── dart.yaml
-    ├── helm_infantry.yaml
-    ├── hero.yaml
-    ├── omni_infantry.yaml
-    ├── radar.yaml
-    ├── sentry.yaml
-    └── wheel_leg.yaml
+└── RobotConfig/
+    ├── sentry_gimbal.yaml   # Gimbal board, launcher, host/autosight input
+    └── sentry_chassis.yaml  # Chassis board, referee and power control
 ```
 
 ## WHERE TO LOOK

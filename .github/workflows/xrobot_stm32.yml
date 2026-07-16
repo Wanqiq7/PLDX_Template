@@ -19,15 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         robot_config:
-          - aerial
-          - dart
-          - helm_infantry
-          - hero
-          - omni_infantry_3
-          - omni_infantry_4
-          - radar
-          - sentry
-          - wheel_leg
+          - sentry_gimbal
+          - sentry_chassis
 
     container:
       image: ghcr.io/xrobot-org/docker-image-stm32:main
@@ -91,15 +84,8 @@ jobs:
       fail-fast: false
       matrix:
         robot_config:
-          - aerial
-          - dart
-          - helm_infantry
-          - hero
-          - omni_infantry_3
-          - omni_infantry_4
-          - radar
-          - sentry
-          - wheel_leg
+          - sentry_gimbal
+          - sentry_chassis
 
     steps:
       - name: download firmware artifact

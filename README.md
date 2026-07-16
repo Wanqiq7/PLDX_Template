@@ -1,6 +1,6 @@
 # bsp-dev-c
 
-BSP Package for development board C.
+Two-board Sentry firmware for STM32F407 Gimbal and Chassis boards.
 
 ## RM2024 Chassis Power Control
 
@@ -37,16 +37,6 @@ ls build/
 ### Linux
 
 ```bash
-git clone https://github.com/Wanqiq7/PLDX_Template.git
-cd PLDX_Template
-git submodule update --init --recursive
-tools/install_stm32_toolchains.sh
-tools/bootstrap_tooling.sh
-export PATH="$PWD/.tooling/python/bin:$PATH"
-export PYTHONPATH="$PWD/.tooling/python:${PYTHONPATH:-}"
-xr_cubemx_cfg -d ./ -c --xrobot
-xrobot_init_mod
-xrobot_setup
-tools/build.sh -c User/RobotConfig/omni_infantry_3.yaml -b build/debug
-ls build/
+tools/buildgimbal.sh --skip-format
+tools/buildchassis.sh --skip-format
 ```
