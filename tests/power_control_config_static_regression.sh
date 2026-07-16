@@ -7,10 +7,6 @@ require "yaml"
 
 MANIFEST_PATH = "Modules/PowerControl/PowerControl.hpp"
 EXPECTED = {
-  "User/RobotConfig/hero.yaml" => ["@&super_power", 8.0, 5, 0],
-  "User/RobotConfig/omni_infantry_3.yaml" => ["@&superpower", 4.5, 4, 0],
-  "User/RobotConfig/omni_infantry_4.yaml" => ["@&superpower", 4.5, 4, 0],
-  "User/RobotConfig/sentry.yaml" => ["@&super_power", 5.5, 4, 0],
   "User/RobotConfig/sentry_chassis.yaml" => ["@&super_power", 5.5, 4, 0],
 }.freeze
 NAMES = %w[

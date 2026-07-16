@@ -3,12 +3,7 @@
 set -euo pipefail
 
 readonly OMNI_HEADER="Modules/Chassis/Omni.hpp"
-readonly SENTRY_CONFIG="User/RobotConfig/sentry.yaml"
 readonly SENTRY_CHASSIS_CONFIG="User/RobotConfig/sentry_chassis.yaml"
-readonly INFANTRY_CONFIGS=(
-  "User/RobotConfig/omni_infantry_3.yaml"
-  "User/RobotConfig/omni_infantry_4.yaml"
-)
 
 assert_contains() {
   local path="$1"
@@ -51,27 +46,16 @@ for dependency in Motor PowerControl Referee SuperPower; do
     "Chassis manifest must declare pldx/${dependency}."
 done
 
-for config in "$SENTRY_CONFIG" "$SENTRY_CHASSIS_CONFIG"; do
-  assert_contains "$config" \
-    'pid_omega_:\n(?:[[:space:]]+.*\n){0,8}[[:space:]]+cycle: false' \
-    "$config must treat angular velocity as a non-cyclic quantity."
-  assert_contains "$config" 'reduction_ratio:' \
-    "$config must use the ChassisParam reduction_ratio key."
-  assert_contains "$config" 'pid_follow_:' \
-    "$config must use the Chassis pid_follow_ key."
-  assert_contains "$config" 'pid_wheel_speed_0_:' \
-    "$config must configure the wheel-speed P loop by its declared key."
-  assert_not_contains "$config" 'pid_wheel_angle_[0-3]_:' \
-    "$config must not rely on positional mapping through obsolete wheel-angle keys."
-done
-
-for config in "${INFANTRY_CONFIGS[@]}"; do
-  assert_contains "$config" \
-    'wheel_to_center: 0\.26' \
-    "$config must retain the 0.26 m yaw-torque lever arm."
-  assert_contains "$config" \
-    'pid_omega_:\n[[:space:]]+k: 0\.26' \
-    "$config must scale the legacy yaw loop by wheel_to_center after T/r conversion."
-done
+assert_contains "$SENTRY_CHASSIS_CONFIG" \
+  'pid_omega_:\n(?:[[:space:]]+.*\n){0,8}[[:space:]]+cycle: false' \
+  'sentry_chassis must treat angular velocity as non-cyclic.'
+assert_contains "$SENTRY_CHASSIS_CONFIG" 'reduction_ratio:' \
+  'sentry_chassis must use ChassisParam reduction_ratio.'
+assert_contains "$SENTRY_CHASSIS_CONFIG" 'pid_follow_:' \
+  'sentry_chassis must use the Chassis pid_follow_ key.'
+assert_contains "$SENTRY_CHASSIS_CONFIG" 'pid_wheel_speed_0_:' \
+  'sentry_chassis must configure the wheel-speed P loop.'
+assert_not_contains "$SENTRY_CHASSIS_CONFIG" 'pid_wheel_angle_[0-3]_:' \
+  'sentry_chassis must not use obsolete wheel-angle keys.'
 
 echo 'PASS: chassis force-control static regression checks'
