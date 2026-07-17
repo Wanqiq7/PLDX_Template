@@ -7,7 +7,7 @@
 ## OVERVIEW
 
 STM32F407-based RoboMaster robot BSP using LibXR framework and xrobot YAML-driven module system.
-Targets: sentry, hero, infantry (omni/helm), aerial, dart, radar, wheel-leg platforms.
+Targets: two-board Sentry firmware for Gimbal and Chassis boards.
 
 ## STRUCTURE
 
@@ -89,7 +89,8 @@ tools/build.sh -c User/xrobot.yaml -b build/debug
 tools/build.sh --skip-format -c User/xrobot.yaml -b build/debug
 
 # Build specific robot config
-tools/build.sh -c User/RobotConfig/sentry.yaml -b build/debug
+tools/build.sh -c User/RobotConfig/sentry_gimbal.yaml -b build/sentry_gimbal
+tools/build.sh -c User/RobotConfig/sentry_chassis.yaml -b build/sentry_chassis
 
 # Format check (CI mode)
 tools/format_code.sh --check
@@ -106,7 +107,7 @@ xr_cubemx_cfg -d ./ --xrobot && xrobot_setup
 - Workflow: `.github/workflows/xrobot_stm32.yml`
 - Triggers: push/PR to `main`/`master`
 - Container: `ghcr.io/xrobot-org/docker-image-stm32:main`
-- Builds 6 robot configs: aerial, dart, helm_infantry, omni_infantry, radar, wheel_leg
+- Builds 2 robot configs: sentry_gimbal, sentry_chassis
 - Gate: all configs must compile clean with `-Werror`
 
 ## EXECUTION FLOW

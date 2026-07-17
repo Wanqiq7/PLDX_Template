@@ -127,7 +127,6 @@ modules:
     referee: '@nullptr'
     thread_priority: LibXR::Thread::Priority::HIGH
     rotor_ff_enabled: false
-    ai_yaw_lqr_eso_enable: true
     yaw_lqr_eso:
       j_kg_m2: 0.03
       b_nms_rad: 0.0
