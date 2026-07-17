@@ -55,7 +55,7 @@ static uint8_t spi1_rx_buf[32];
 static uint8_t usart1_tx_buf[128];
 static uint8_t usart1_rx_buf[128];
 static uint8_t usart3_rx_buf[128];
-static uint8_t usart6_tx_buf[512];
+static uint8_t usart6_tx_buf[528];
 static uint8_t usart6_rx_buf[512];
 static uint8_t i2c1_buf[32];
 static uint8_t i2c3_buf[32];

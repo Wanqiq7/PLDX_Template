@@ -128,7 +128,6 @@ modules:
     thread_priority: LibXR::Thread::Priority::HIGH
     rotor_ff_enabled: false
     yaw_lqr_eso:
-      j_kg_m2: 0.03
       b_nms_rad: 0.0
       k_theta: 1.0
       k_omega: 1.0
@@ -155,8 +154,6 @@ modules:
       lqi_enable: false
       torque_bias_enable: false
       torque_slew_enable: true
-    euler_topic_name: gimbal_euler
-    gyro_topic_name: gimbal_gyro
 - id: dual_board
   name: DualBoard
   template_args:
@@ -322,13 +319,21 @@ modules:
     host_euler_topic_name: target_euler
     host_chassis_data_topic_name: chassis_data
     host_fire_topic_name: fire_notify
+- id: ws_protocol
+  name: WsProtocol
+  constructor_args:
+    task_stack_depth_uart: 1024
+    uart: uart_ext_controller
+    baudrate: 115200
+    chassis_topic_name: chassis_data
+    referee_topic_name: sentry_ref
+    thread_priority_uart: LibXR::Thread::Priority::MEDIUM
 - id: sharetopic
   name: SharedTopic
   constructor_args:
     uart_name: usb_otg_hs_cdc
     buffer_size: 256
     topic_configs:
-    - chassis_data
     - sentry_state
     - target_euler
     - fire_notify
@@ -339,7 +344,6 @@ modules:
     slot_count: 16
     topic_configs:
     - yawmotor_angle
-    - sentry_ref
     - ahrs_quaternion
 - id: client_topic_autoaim
   name: SharedTopicClient
@@ -348,4 +352,3 @@ modules:
     slot_count: 16
     topic_configs:
     - ahrs_quaternion
-
