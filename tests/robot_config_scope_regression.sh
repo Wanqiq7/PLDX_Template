@@ -30,4 +30,16 @@ for path in "${ACTIVE_FILES[@]}"; do
   fi
 done
 
+readonly BUILD_WRAPPERS=(
+  tools/buildgimbal.sh
+  tools/buildchassis.sh
+)
+
+for path in "${BUILD_WRAPPERS[@]}"; do
+  if [[ ! -x "$path" ]]; then
+    echo "FAIL: build wrapper is not executable: $path" >&2
+    exit 1
+  fi
+done
+
 echo 'PASS: two-board Sentry robot configuration scope'
