@@ -25,6 +25,7 @@ function Assert-NotContains {
 }
 
 $dualBoardHeader = 'Modules/DualBoard/DualBoard.hpp'
+$motionStateHeader = 'Modules/Chassis/ChassisMotionState.hpp'
 $dualBoardCMake = 'Modules/DualBoard/CMakeLists.txt'
 $gimbalYaml = 'User/RobotConfig/sentry_gimbal.yaml'
 $chassisYaml = 'User/RobotConfig/sentry_chassis.yaml'
@@ -48,7 +49,11 @@ Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(AttitudeFrame\) == 8' '
 Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(LauncherFeedbackFrame\) == 8' 'DualBoard launcher feedback frame must stay exactly one classic CAN frame.'
 Assert-Contains $dualBoardHeader 'static_assert\(sizeof\(MotionFrame\) == 8' 'DualBoard MotionFrame must stay exactly one classic CAN frame.'
 Assert-Contains $dualBoardHeader 'GYRO_SCALE = 900\.0f' 'DualBoard gyro scale is missing.'
-Assert-Contains $dualBoardHeader 'chassis_gyro_z' 'DualBoard chassis gyro z Topic is missing.'
+Assert-Contains $dualBoardHeader 'ChassisMotionState' 'DualBoard semantic chassis motion state is missing.'
+Assert-Contains $motionStateHeader 'CHASSIS_MOTION_STATE_TOPIC_NAME' 'Motion state Topic name must be centralized.'
+Assert-Contains $motionStateHeader 'CHASSIS_MOTION_STATE_TOPIC_MULTI_PUBLISHER' 'Motion state Topic attributes must be centralized.'
+Assert-Contains $dualBoardHeader 'FindOrCreate<ChassisMotionState>' 'DualBoard must find or create the typed motion state Topic.'
+Assert-NotContains $dualBoardHeader 'chassis_gyro_z_topic_' 'DualBoard must not retain the raw gyro Topic member.'
 Assert-NotContains $dualBoardHeader 'chassis_alpha_z' 'DualBoard must not add chassis angular acceleration.'
 $dualBoardLines = Get-Content -Path $dualBoardHeader
 $motionFrameStartLine = (Select-String -Path $dualBoardHeader -Pattern '^  void HandleMotionFrame\(' -CaseSensitive).LineNumber
@@ -65,6 +70,22 @@ if ($motionFrameBody -notmatch 'online_\s*=\s*true') {
 }
 if ($motionFrameBody -notmatch 'safe_state_published_\s*=\s*false') {
   throw 'A received MotionFrame must re-arm the existing DualBoard offline safe state.'
+}
+if ($motionFrameBody -notmatch 'motion_state_\.yaw_rate_valid') {
+  throw 'MotionFrame validity must be represented in ChassisMotionState.'
+}
+if ($motionFrameBody -notmatch 'motion_state_\.online\s*=\s*true') {
+  throw 'MotionFrame must publish online state.'
+}
+if ($motionFrameBody -notmatch 'PublishMotionStateLocked\(\)') {
+  throw 'MotionFrame must publish the merged semantic state.'
+}
+Assert-Contains $dualBoardHeader 'motion_state_ = {}' 'DualBoard timeout must clear the complete motion state.'
+if ($dualBoardLines -notmatch 'event_id == static_cast<uint32_t>\(ChassisMode::ROTOR\)') {
+  throw 'DualBoard must translate rotor mode semantically.'
+}
+if ($dualBoardLines -notmatch 'ChassisMotionMode::NON_ROTOR') {
+  throw 'DualBoard must publish non-rotor mode semantically.'
 }
 Assert-Contains $dualBoardHeader 'PublishSafeChassisState' 'DualBoard must publish a zero command when the link is offline.'
 Assert-Contains $dualBoardHeader 'ForceRemoteMode\(static_cast<uint32_t>\(ChassisMode::RELAX\)\)' 'DualBoard must force chassis RELAX on link timeout.'

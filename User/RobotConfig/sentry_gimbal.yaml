@@ -19,10 +19,12 @@ modules:
     gyro_range: BMI088::GyroRange::DEG_2000DPS
     accl_range: BMI088::AcclRange::ACCL_24G
     rotation:
-      w: 1.0
+      # BMI088/C-board USB faces vehicle +X. Convert sensor S to body B:
+      # R_BS = [[0, 1, 0], [-1, 0, 0], [0, 0, 1]].
+      w: 0.70710678
       x: 0.0
       y: 0.0
-      z: 0.0
+      z: -0.70710678
     pid_param:
       k: 1.0
       p: 0.35
@@ -124,7 +126,6 @@ modules:
     patrol_range: 455.0
     patrol_omega: 0.01
     reverse_flag: true
-    referee: '@nullptr'
     thread_priority: LibXR::Thread::Priority::HIGH
     rotor_ff_enabled: false
     yaw_lqr_eso:
@@ -145,8 +146,6 @@ modules:
       tau_meas_lpf_alpha: 0.1
       theta_deadband_rad: 0.0
       torque_soft_limit_nm: 2.0
-      torque_min_nm: -2.223
-      torque_max_nm: 2.223
       torque_slew_rate_nm_s: 1000.0
       eso_enable: true
       eso_comp_enable: false
