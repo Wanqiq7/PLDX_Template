@@ -26,20 +26,21 @@ bsp-dev-c/
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add/modify robot behavior | `User/RobotConfig/*.yaml` | YAML-driven module composition |
-| Map new hardware peripheral | `User/app_main.cpp` | Register into `HardwareContainer` |
-| Add new robot module | `Modules/<Name>/` | Must follow xrobot module pattern |
-| Modify boot/peripheral init | `Core/Src/main.c` | Only inside `USER CODE BEGIN/END` blocks |
-| Change build pipeline | `tools/build.sh` | format -> generate -> compile |
-| Adjust cross-compilation | `cmake/starm-clang.cmake` | Toolchain flags |
-| LibXR framework integration | `cmake/LibXR.CMake` | Sets C++17, FreeRTOS, `st` driver |
-| Flash memory layout | `User/flash_map.hpp` | Auto-generated sector table |
+| Task                        | Location                  | Notes                                    |
+| --------------------------- | ------------------------- | ---------------------------------------- |
+| Add/modify robot behavior   | `User/RobotConfig/*.yaml` | YAML-driven module composition           |
+| Map new hardware peripheral | `User/app_main.cpp`       | Register into `HardwareContainer`        |
+| Add new robot module        | `Modules/<Name>/`         | Must follow xrobot module pattern        |
+| Modify boot/peripheral init | `Core/Src/main.c`         | Only inside `USER CODE BEGIN/END` blocks |
+| Change build pipeline       | `tools/build.sh`          | format -> generate -> compile            |
+| Adjust cross-compilation    | `cmake/starm-clang.cmake` | Toolchain flags                          |
+| LibXR framework integration | `cmake/LibXR.CMake`       | Sets C++17, FreeRTOS, `st` driver        |
+| Flash memory layout         | `User/flash_map.hpp`      | Auto-generated sector table              |
 
 ## CONVENTIONS
 
 ### Naming (enforced by `.clangd` + Clang-Tidy)
+
 - Variables / globals: `lower_case`
 - Class/private/protected members: `lower_case_` (trailing underscore)
 - Classes / structs / enums: `CamelCase`
@@ -49,19 +50,22 @@ bsp-dev-c/
 - File names: `PascalCase.hpp` for modules; `snake_case.yaml` for robot configs
 
 ### Formatting
+
 - `.clang-format`: Google style, `IncludeBlocks: Regroup`
 - **clang-format 21.1.8** required (enforced by `tools/format_code.sh`)
 - Formatting scope: `Modules/` only (not Core/, Drivers/, Middlewares/)
 - Install: `python3 -m venv .venv-clang-format && .venv-clang-format/bin/pip install "clang-format==21.1.8"`
 
 ### Build
+
 - C11 + C++17, `-Werror` globally
 - Debug: app code `-Og`, libraries `-O2`
 - Target: Cortex-M4 FPv4-SP, `-fno-rtti -fno-exceptions`
 - Linker enables `_printf_float`
 
 ### Agent Naming Enforcement
-- For naming audits, identifier refactors, and style-conformance fixes in C/C++ or YAML, invoke `$bsp-dev-c-naming` by default.
+
+- For naming audits, identifier refactors, and style-conformance fixes in C/C++ or YAML, invoke `$` by default.
 - Mandatory unless user explicitly requests a compatibility-preserving exception.
 
 ## ANTI-PATTERNS (THIS PROJECT)
