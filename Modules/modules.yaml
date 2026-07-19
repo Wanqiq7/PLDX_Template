@@ -24,7 +24,7 @@ modules:
 - pldx/SharedTopic
 - pldx/SharedTopicClient
 - pldx/DualBoard
-- qdu-future/Dart
-- qdu-future/HeroLauncher
-- qdu-future/CameraSync
-- qdu-future/MiniGimbal
+- pldx/Dart
+- pldx/HeroLauncher
+- pldx/CameraSync
+- pldx/MiniGimbal
