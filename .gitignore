@@ -13,6 +13,10 @@ compile_commands.json
 .worktrees/
 tmp/
 build/**
+.Doc/
+.embeddedskills/
+docs/superpowers/
+tests/
 DevC.jdebug.user
 .config.json
 User/xrobot_main.hpp
