@@ -44,7 +44,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__((section(".ccmram")));
+uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__((section(".ccmbss")));
 /* USER CODE END Variables */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,22 +53,7 @@ uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__((section(".ccmram")));
 /* USER CODE END FunctionPrototypes */
 
 /* Hook prototypes */
-void configureTimerForRunTimeStats(void);
-unsigned long getRunTimeCounterValue(void);
 void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName);
-
-/* USER CODE BEGIN 1 */
-/* Functions needed when configGENERATE_RUN_TIME_STATS is on */
-__weak void configureTimerForRunTimeStats(void)
-{
-
-}
-
-__weak unsigned long getRunTimeCounterValue(void)
-{
-return 0;
-}
-/* USER CODE END 1 */
 
 /* USER CODE BEGIN 4 */
 __weak void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName)
