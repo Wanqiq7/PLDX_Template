@@ -39,6 +39,8 @@ modules:
     chassis_cmd_topic_name: chassis_cmd
     gimbal_cmd_topic_name: gimbal_cmd
     launcher_cmd_topic_name: launcher_cmd
+    dispatch_task_stack_depth: 1024
+    dispatch_thread_priority: LibXR::Thread::Priority::HIGH
 - id: super_power
   name: SuperPower
   constructor_args:
@@ -313,3 +315,9 @@ modules:
     offline_timeout_ms: 100
     chassis: '@&chassis'
     mode_topic_name: dualboard_chassis_mode
+    cmd: '@nullptr'
+    sentry_buy_bullet_num_topic_name: sentry_buy_bullet_num
+    sentry_remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times
+    sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times
+    sentry_buy_resurrection_topic_name: sentry_buy_resurrection
+    sentry_state_topic_name: sentry_state

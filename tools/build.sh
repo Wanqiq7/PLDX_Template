@@ -12,9 +12,8 @@ Usage:
 
 Description:
   1) Run clang-format for C/C++ files under Modules/
-  2) Generate xrobot header from YAML via xrobot_gen_main
-  3) Configure firmware with cube-cmake
-  4) Build firmware with cube-cmake
+  2) Configure firmware and its generated xrobot header with cube-cmake
+  3) Build firmware with cube-cmake
 
 Options:
   -c, --config <path>     YAML config path (default: xrobot.yaml)
@@ -343,9 +342,11 @@ configure_build_tree() {
       -G Ninja \
       --toolchain "${REPO_ROOT}/cmake/starm-clang.cmake" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-      -DCMAKE_BUILD_TYPE="${build_type}"
+      -DCMAKE_BUILD_TYPE="${build_type}" \
+      -DXROBOT_CONFIG:FILEPATH="${CONFIG_PATH}"
   else
-    "${CUBE_CMAKE_BIN}" --preset "${PRESET}"
+    "${CUBE_CMAKE_BIN}" --preset "${PRESET}" \
+      -DXROBOT_CONFIG:FILEPATH="${CONFIG_PATH}"
   fi
 }
 
@@ -429,6 +430,10 @@ if [[ -z "${CONFIG_PATH}" ]]; then
   fi
 fi
 
+if [[ "${CONFIG_PATH}" != /* ]]; then
+  CONFIG_PATH="${REPO_ROOT}/${CONFIG_PATH}"
+fi
+
 if [[ ! -f "${CONFIG_PATH}" ]]; then
   echo "Error: YAML config not found: ${CONFIG_PATH}" >&2
   exit 1
@@ -473,19 +478,16 @@ if ! command -v starm-clang >/dev/null 2>&1; then
 fi
 
 if [[ "${SKIP_FORMAT}" -eq 0 ]]; then
-  echo "[1/4] Running clang-format..."
+  echo "[1/3] Running clang-format..."
   "${REPO_ROOT}/tools/format_code.sh"
 else
-  echo "[1/4] Skip clang-format."
+  echo "[1/3] Skip clang-format."
 fi
 
-echo "[2/4] Generating xrobot header from ${CONFIG_PATH}..."
-xrobot_gen_main --config "${CONFIG_PATH}"
-
-echo "[3/4] Configuring with cube-cmake (${BUILD_TARGET_DESC})..."
+echo "[2/3] Configuring with cube-cmake (${BUILD_TARGET_DESC})..."
 configure_build_tree
 
-echo "[4/4] Building with cube-cmake (${BUILD_TARGET_DESC})..."
+echo "[3/3] Building with cube-cmake (${BUILD_TARGET_DESC})..."
 "${CUBE_CMAKE_BIN}" --build "${BUILD_PATH}"
 
 echo "Done."

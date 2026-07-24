@@ -5,7 +5,3 @@ modules:
   name: BlinkLED
   constructor_args:
     blink_cycle: 250
-- id: BlinkLED_0
-  name: BlinkLED
-  constructor_args:
-    blink_cycle: 250

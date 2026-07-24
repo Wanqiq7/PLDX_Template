@@ -34,7 +34,7 @@ bsp-dev-c/
 | Modify boot/peripheral init | `Core/Src/main.c`         | Only inside `USER CODE BEGIN/END` blocks |
 | Change build pipeline       | `tools/build.sh`          | format -> generate -> compile            |
 | Adjust cross-compilation    | `cmake/starm-clang.cmake` | Toolchain flags                          |
-| LibXR framework integration | `cmake/LibXR.CMake`       | Sets C++17, FreeRTOS, `st` driver        |
+| LibXR framework integration | `cmake/LibXR.CMake`       | Sets C++20, FreeRTOS, `st` driver        |
 | Flash memory layout         | `User/flash_map.hpp`      | Auto-generated sector table              |
 
 ## CONVENTIONS
@@ -58,7 +58,7 @@ bsp-dev-c/
 
 ### Build
 
-- C11 + C++17, `-Werror` globally
+- C11 + C++20, `-Werror` globally
 - Debug: app code `-Og`, libraries `-O2`
 - Target: Cortex-M4 FPv4-SP, `-fno-rtti -fno-exceptions`
 - Linker enables `_printf_float`

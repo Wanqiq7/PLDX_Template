@@ -167,6 +167,16 @@ SECTIONS
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
 
+  .ccmbss (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _sccmbss = .;
+    *(.ccmbss)
+    *(.ccmbss*)
+    . = ALIGN(4);
+    _eccmbss = .;
+  } >CCMRAM
+
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 

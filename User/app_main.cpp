@@ -19,7 +19,7 @@
 #include "stm32_watchdog.hpp"
 #include "flash_map.hpp"
 #include "app_framework.hpp"
-#include "xrobot_main.hpp"
+#include <xrobot_main.hpp>
 
 using namespace LibXR;
 
@@ -129,7 +129,8 @@ extern "C" void app_main(void) {
   STM32UART usart6(&huart6,
               usart6_rx_buf, usart6_tx_buf, 15);
 
-  STM32I2C i2c1(&hi2c1, i2c1_buf, 3);
+  static constexpr uint32_t I2C_DMA_DISABLED_THRESHOLD = UINT32_MAX;
+  STM32I2C i2c1(&hi2c1, i2c1_buf, I2C_DMA_DISABLED_THRESHOLD);
 
   STM32I2C i2c3(&hi2c3, i2c3_buf, 3);
 

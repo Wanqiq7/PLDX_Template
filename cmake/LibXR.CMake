@@ -29,6 +29,10 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+target_include_directories(${CMAKE_PROJECT_NAME} BEFORE PRIVATE
+    "${XROBOT_GENERATED_DIR}"
+)
+
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     PUBLIC $<TARGET_PROPERTY:xr,INTERFACE_INCLUDE_DIRECTORIES>
