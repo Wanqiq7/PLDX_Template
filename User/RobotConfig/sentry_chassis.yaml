@@ -146,6 +146,8 @@ modules:
       rotor_buffer_low_j: 35.0
       rotor_buffer_high_j: 70.0
       rotor_scale_lpf_alpha: 0.2
+      telemetry_feedback_max_age_ms: 30
+      telemetry_max_sample_skew_ms: 3
     pid_follow_:
       k: 1
       p: 1.0
@@ -321,3 +323,4 @@ modules:
     sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times
     sentry_buy_resurrection_topic_name: sentry_buy_resurrection
     sentry_state_topic_name: sentry_state
+    wheel_telemetry_topic_name: chassis_wheel_telemetry

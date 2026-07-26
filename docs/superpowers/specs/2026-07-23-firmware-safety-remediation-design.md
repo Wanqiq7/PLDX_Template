@@ -60,6 +60,14 @@ The following invariants apply to every implementation phase:
    and observable when transport is unavailable.
 6. Generated configuration and dependencies must be isolated and reproducible;
    parallel builds may not modify a shared source-tree output.
+7. Prefer the smallest local change that fully restores the invariant; do not
+   introduce a new abstraction, dependency, or generated-file edit without a
+   concrete verification benefit.
+8. Reuse LibXR synchronization, queue, timebase, topic, thread, and driver APIs
+   wherever they provide the required semantics. Use standard-library utilities
+   only where LibXR has no equivalent or a pure host-test boundary requires them.
+9. Preserve each module's existing file organization, header-oriented
+   implementation style, naming, formatting, and error-reporting conventions.
 
 ## 4. Repository and Commit Boundaries
 
@@ -82,9 +90,11 @@ CI, and documentation changes.
 | `Modules/WsProtocol` | F25 configured thread priority | Independent focused commit |
 | Root repository | F11-F24, F26-F28 integration, platform, build, CI, docs | Pin all verified module commits; never mix generated output with functional edits |
 
-Cross-repository work is coordinated by a release manifest recording the exact
-commit for every changed module. A root integration commit is not considered
-complete until both sentry configurations build against that manifest.
+Cross-repository work is coordinated by immutable module tags plus a release lock
+recording the exact commit for every tag. This preserves compatibility with the
+existing xrobot clone flow while detecting a moved or mismatched tag. A root
+integration commit is not considered complete until both sentry configurations
+build against that lock.
 
 ## 5. Architecture Decisions
 
@@ -97,10 +107,12 @@ full `0..65535` range. A small pure conversion helper will be covered at raw
 boundaries `0x0000`, `0x7fff`, `0x8000`, and `0xffff`. This prevents the current
 signed cast from mapping the upper half of the encoder domain below `-PMAX`.
 
-MIT `kp` and `kd` inputs are checked for finiteness and clamped to the protocol
-range before quantization. Invalid gains take the safe lower bound rather than
-wrapping through an unsigned packet field. Existing CAN identifiers and packet
-layout remain unchanged.
+MIT inputs are checked for finiteness before per-field clamping. If any of `pos`,
+`vel`, `kp`, `kd`, or `tor` is non-finite, the complete frame is replaced by a
+neutral command with zero position, velocity, gains, and torque; this actively
+supersedes the previous motor command without changing enable state. Finite
+out-of-range values are clamped to their protocol ranges before quantization.
+Existing CAN identifiers and packet layout remain unchanged.
 
 #### Gimbal automatic patrol and sensor validity
 
@@ -174,8 +186,8 @@ versioned decision message.
 Peripheral registration must describe actual initialized hardware:
 
 - I2C1 will not select DMA while no DMA handles/IRQs are initialized. The preferred
-  minimal change is to configure it as interrupt/polling-only unless measurements
-  justify fully wiring DMA.
+  minimal change is to configure its LibXR registration as interrupt/polling-only;
+  DMA is added only later if measured throughput demonstrates a requirement.
 - If `IMU_INT` remains registered on EXTI1, EXTI1 NVIC setup and the IRQ handler
   must dispatch through HAL from an allowed user-code region. Otherwise the mapping
   is removed.

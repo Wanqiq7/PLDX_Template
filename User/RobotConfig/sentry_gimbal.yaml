@@ -176,6 +176,7 @@ modules:
     sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times
     sentry_buy_resurrection_topic_name: sentry_buy_resurrection
     sentry_state_topic_name: sentry_state
+    wheel_telemetry_topic_name: chassis_wheel_telemetry
 - id: motor_trig
   name: RMMotor
   constructor_args:
@@ -324,20 +325,38 @@ modules:
   constructor_args:
     cmd: '@cmd'
     host_gimbal_topic_name: target_euler
-    host_chassis_data_topic_name: chassis_data
+    host_chassis_data_topic_name: nav_chassis_target_v1
     host_fire_topic_name: fire_notify
     task_stack_depth: 1024
     thread_priority: LibXR::Thread::Priority::MEDIUM
-- id: ws_protocol
-  name: WsProtocol
+- id: nav_host_link
+  name: NavHostLink
   constructor_args:
-    task_stack_depth_uart: 1024
-    uart: uart_ext_controller
-    baudrate: 115200
-    chassis_topic_name: chassis_data
+    uart_name: uart_ext_controller
     referee_topic_name: sentry_ref
-    thread_priority_uart: LibXR::Thread::Priority::MEDIUM
-- id: sharetopic
+    wheel_telemetry_topic_name: chassis_wheel_telemetry
+    pitch_topic_name: pitchmotor_angle
+    yaw_topic_name: yawmotor_angle
+    quaternion_topic_name: ahrs_quaternion
+- id: nav_rx_shared_topic
+  name: SharedTopic
+  constructor_args:
+    uart_name: uart_ext_controller
+    buffer_size: 256
+    topic_configs:
+    - nav_chassis_target_v1
+    - nav_decision_cmd_v1
+- id: nav_tx_shared_topic_client
+  name: SharedTopicClient
+  constructor_args:
+    uart_name: uart_ext_controller
+    slot_count: 32
+    topic_configs:
+    - nav_gimbal_state_v1
+    - nav_referee_state_v1
+    - nav_wheel_telemetry_v1
+    - nav_link_status_v1
+- id: vision_shared_topic
   name: SharedTopic
   constructor_args:
     uart_name: usb_otg_hs_cdc
@@ -350,7 +369,7 @@ modules:
     - sentry_buy_resurrection
     - target_euler
     - fire_notify
-- id: client_topic
+- id: vision_shared_topic_client
   name: SharedTopicClient
   constructor_args:
     uart_name: usb_otg_hs_cdc
