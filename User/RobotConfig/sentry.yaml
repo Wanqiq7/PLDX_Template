@@ -535,19 +535,13 @@ modules:
     host_euler_topic_name: target_euler
     host_chassis_data_topic_name: chassis_data
     host_fire_topic_name: fire_notify
-- id: ws_protocol
-  name: WsProtocol
-  constructor_args:
-    uart_name: uart_ext_controller
-    chassis_topic_name: chassis_data
-    task_stack_depth: 1024
-    thread_priority: LibXR::Thread::Priority::MEDIUM
 - id: sharetopic
   name: SharedTopic
   constructor_args:
     uart_name: usb_otg_hs_cdc
     buffer_size: 256
     topic_configs:
+    - chassis_data
     - sentry_state
     - target_euler
     - fire_notify

@@ -33,7 +33,7 @@ USART:
     tx_queue_size: 5
     dma_section: ''
   usart6:
-    tx_buffer_size: 512
+    tx_buffer_size: 528
     rx_buffer_size: 512
     tx_queue_size: 15
     dma_section: ''
