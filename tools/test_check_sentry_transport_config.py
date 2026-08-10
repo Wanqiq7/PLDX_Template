@@ -81,16 +81,32 @@ class SentryTransportConfigTest(unittest.TestCase):
             self.assert_gate_rejected(*paths, "gimbal DualBoard: expected exactly one")
 
     def test_rejects_duplicate_shared_topic_input(self):
-        def duplicate_decision_input(gimbal_config, chassis_config):
+        def duplicate_target_input(gimbal_config, chassis_config):
             shared_topic = next(
                 module for module in gimbal_config["modules"]
                 if module["name"] == "SharedTopic"
+                and module["constructor_args"].get("uart_name") == check.USB_UART
+            )
+            shared_topic["constructor_args"]["topic_configs"].append("target_euler")
+
+        with self.temporary_configs(duplicate_target_input) as paths:
+            self.assert_gate_rejected(
+                *paths, "gimbal SharedTopic contains duplicate topics: target_euler"
+            )
+
+    def test_rejects_usb_decision_topic(self):
+        def add_decision_input(gimbal_config, chassis_config):
+            shared_topic = next(
+                module for module in gimbal_config["modules"]
+                if module["name"] == "SharedTopic"
+                and module["constructor_args"].get("uart_name") == check.USB_UART
             )
             shared_topic["constructor_args"]["topic_configs"].append("sentry_state")
 
-        with self.temporary_configs(duplicate_decision_input) as paths:
+        with self.temporary_configs(add_decision_input) as paths:
             self.assert_gate_rejected(
-                *paths, "gimbal SharedTopic contains duplicate topics: sentry_state"
+                *paths,
+                "gimbal USB SharedTopic must not expose navigation decision topics: sentry_state",
             )
 
     def test_rejects_chassis_usb_client(self):

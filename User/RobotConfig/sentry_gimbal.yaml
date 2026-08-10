@@ -329,14 +329,6 @@ modules:
     host_fire_topic_name: fire_notify
     task_stack_depth: 1024
     thread_priority: LibXR::Thread::Priority::MEDIUM
-- id: ws_protocol
-  name: WsProtocol
-  constructor_args:
-    task_stack_depth_uart: 1024
-    uart: uart_ext_controller
-    baudrate: 115200
-    chassis_topic_name: chassis_data
-    thread_priority_uart: LibXR::Thread::Priority::MEDIUM
 - id: nav_host_link
   name: NavHostLink
   constructor_args:
@@ -370,11 +362,6 @@ modules:
     uart_name: usb_otg_hs_cdc
     buffer_size: 256
     topic_configs:
-    - sentry_state
-    - sentry_buy_bullet_num
-    - sentry_remote_buy_bullet_times
-    - sentry_remote_buy_hp_times
-    - sentry_buy_resurrection
     - target_euler
     - fire_notify
 - id: vision_shared_topic_client
@@ -383,12 +370,5 @@ modules:
     uart_name: usb_otg_hs_cdc
     slot_count: 16
     topic_configs:
-    - yawmotor_angle
     - ahrs_quaternion
-- id: client_topic_autoaim
-  name: SharedTopicClient
-  constructor_args:
-    uart_name: usb_otg_hs_cdc
-    slot_count: 16
-    topic_configs:
-    - ahrs_quaternion
+    - nav_gimbal_feedback_v1

@@ -27,8 +27,10 @@ SENTRY_PROTOCOL_TOPICS = {
     "state_topic_name": "sentry_state",
 }
 USB_UART = "usb_otg_hs_cdc"
-REQUIRED_OUTBOUND_TOPICS = ("yawmotor_angle", "ahrs_quaternion")
-REQUIRED_GIMBAL_INPUT_TOPICS = (*DECISION_TOPICS.values(), "target_euler", "fire_notify")
+REQUIRED_OUTBOUND_TOPICS = (
+    "ahrs_quaternion", "nav_gimbal_feedback_v1"
+)
+REQUIRED_GIMBAL_INPUT_TOPICS = ("target_euler", "fire_notify")
 
 
 class UniqueKeySafeLoader(yaml.SafeLoader):
@@ -171,6 +173,12 @@ def check_gimbal_shared_topic(module, gimbal_modules, dual_board, errors):
                     f"gimbal SharedTopic must contain {topic!r} exactly once, "
                     f"found {topic_count}"
                 )
+        forbidden_topics = sorted(set(topics).intersection(DECISION_TOPICS.values()))
+        if forbidden_topics:
+            errors.append(
+                "gimbal USB SharedTopic must not expose navigation decision topics: "
+                + ", ".join(forbidden_topics)
+            )
 
     if dual_board is not None and gimbal_modules.index(dual_board) > gimbal_modules.index(module):
         errors.append("gimbal DualBoard must appear before SharedTopic")
@@ -181,6 +189,14 @@ def usb_shared_topic_clients(modules):
         module
         for module in modules_named(modules, "SharedTopicClient")
         if (constructor_args(module) or {}).get("uart_name") == USB_UART
+    ]
+
+
+def shared_topics_on_uart(modules, uart_name):
+    return [
+        module
+        for module in modules_named(modules, "SharedTopic")
+        if (constructor_args(module) or {}).get("uart_name") == uart_name
     ]
 
 
@@ -236,9 +252,31 @@ def check_configuration():
     sentry_protocol = require_singleton(
         chassis_modules, "SentryProtocol", "chassis", errors
     )
-    gimbal_shared_topic = require_singleton(
-        gimbal_modules, "SharedTopic", "gimbal", errors
-    )
+    gimbal_usb_shared_topics = shared_topics_on_uart(gimbal_modules, USB_UART)
+    if len(gimbal_usb_shared_topics) != 1:
+        errors.append(
+            f"gimbal SharedTopic on {USB_UART}: expected exactly one, "
+            f"found {len(gimbal_usb_shared_topics)}"
+        )
+        gimbal_shared_topic = None
+    else:
+        gimbal_shared_topic = gimbal_usb_shared_topics[0]
+
+    if modules_named(gimbal_modules, "WsProtocol"):
+        errors.append("gimbal WsProtocol is obsolete; use NavHostLink + SharedTopic")
+
+    # Every SharedTopic instance must have a unique topic list, including the
+    # USART6 navigation receiver.  Direction-specific requirements are checked
+    # below for the USB instance.
+    for shared_topic in modules_named(gimbal_modules, "SharedTopic"):
+        topics = require_topic_configs(shared_topic, "gimbal SharedTopic", errors)
+        if topics is not None:
+            duplicates = duplicate_topics(topics)
+            if duplicates:
+                errors.append(
+                    "gimbal SharedTopic contains duplicate topics: "
+                    + ", ".join(duplicates)
+                )
 
     check_dual_board("gimbal", gimbal_dual_board, errors)
     check_dual_board("chassis", chassis_dual_board, errors)
