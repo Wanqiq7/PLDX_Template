@@ -19,7 +19,7 @@ bsp-dev-c/
 ├── Modules/        # Robot modules: Chassis, Gimbal, Motor, etc. (see Modules/AGENTS.md)
 ├── User/           # Application layer: hardware mapping + robot configs (see User/AGENTS.md)
 ├── cmake/          # Toolchain (starm-clang, gcc-arm) + CubeMX CMake integration
-├── tools/          # build.sh, format_code.sh, ozone launcher
+├── tools/          # buildchassis.ps1, buildgimbal.ps1, format_code.ps1
 ├── DevC.ioc        # CubeMX project (STM32F407IGHx)
 └── STM32F407XX_FLASH.ld  # Linker script
 ```
@@ -32,7 +32,7 @@ bsp-dev-c/
 | Map new hardware peripheral | `User/app_main.cpp`       | Register into `HardwareContainer`        |
 | Add new robot module        | `Modules/<Name>/`         | Must follow xrobot module pattern        |
 | Modify boot/peripheral init | `Core/Src/main.c`         | Only inside `USER CODE BEGIN/END` blocks |
-| Change build pipeline       | `tools/build.sh`          | format -> generate -> compile            |
+| Change build pipeline       | `tools/build*.ps1`        | format -> generate -> compile            |
 | Adjust cross-compilation    | `cmake/starm-clang.cmake` | Toolchain flags                          |
 | LibXR framework integration | `cmake/LibXR.CMake`       | Sets C++20, FreeRTOS, `st` driver        |
 | Flash memory layout         | `User/flash_map.hpp`      | Auto-generated sector table              |
@@ -52,9 +52,9 @@ bsp-dev-c/
 ### Formatting
 
 - `.clang-format`: Google style, `IncludeBlocks: Regroup`
-- **clang-format 21.1.8** required (enforced by `tools/format_code.sh`)
+- **clang-format 21.1.8** required (enforced by `tools/format_code.ps1`)
 - Formatting scope: `Modules/` only (not Core/, Drivers/, Middlewares/)
-- Install: `python3 -m venv .venv-clang-format && .venv-clang-format/bin/pip install "clang-format==21.1.8"`
+- Install: `python -m venv .venv-clang-format && .venv-clang-format\Scripts\pip install "clang-format==21.1.8"`
 
 ### Build
 
@@ -81,26 +81,28 @@ bsp-dev-c/
 
 ## COMMANDS
 
-```bash
+```powershell
 # Setup
 git submodule update --init --recursive
 pip install libxr xrobot
 
 # Full pipeline (format + generate + build)
-tools/build.sh -c User/xrobot.yaml -b build/debug
+pwsh tools/buildgimbal.ps1
+pwsh tools/buildchassis.ps1
 
 # Compile-only (skip formatting, faster)
-tools/build.sh --skip-format -c User/xrobot.yaml -b build/debug
+pwsh tools/buildgimbal.ps1 --skip-format
+pwsh tools/buildchassis.ps1 --skip-format
 
-# Build specific robot config
-tools/build.sh -c User/RobotConfig/sentry_gimbal.yaml -b build/sentry_gimbal
-tools/build.sh -c User/RobotConfig/sentry_chassis.yaml -b build/sentry_chassis
+# Override config / build directory
+pwsh tools/buildgimbal.ps1 -c User/RobotConfig/sentry_gimbal.yaml -b build/sentry_gimbal
+pwsh tools/buildchassis.ps1 -c User/RobotConfig/sentry_chassis.yaml -b build/sentry_chassis
 
 # Format check (CI mode)
-tools/format_code.sh --check
+pwsh tools/format_code.ps1 --check
 
 # Format apply
-tools/format_code.sh
+pwsh tools/format_code.ps1
 
 # Generate xrobot code only
 xr_cubemx_cfg -d ./ --xrobot && xrobot_setup

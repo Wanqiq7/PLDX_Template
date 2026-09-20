@@ -61,7 +61,8 @@ FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
 }
 
 /* Highest address of the user mode stack */
-_estack = ORIGIN(RAM) + LENGTH(RAM);    /* end of RAM */
+/* 为异常入口和 FPU 惰性压栈预留安全空间，避免 MSP 在 RAM 顶端越界。 */
+_estack = ORIGIN(RAM) + LENGTH(RAM) - 0x80;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x1000;      /* required amount of heap  */
 _Min_Stack_Size = 0x1000; /* required amount of stack */
@@ -166,16 +167,6 @@ SECTIONS
     . = ALIGN(4);
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
-
-  .ccmbss (NOLOAD) :
-  {
-    . = ALIGN(4);
-    _sccmbss = .;
-    *(.ccmbss)
-    *(.ccmbss*)
-    . = ALIGN(4);
-    _eccmbss = .;
-  } >CCMRAM
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);

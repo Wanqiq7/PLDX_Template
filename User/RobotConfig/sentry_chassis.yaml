@@ -1,218 +1,214 @@
 global_settings:
-  monitor_sleep_ms: 1000
+  monitor_sleep_ms: 1000 # 模块监控任务的轮询周期，单位 ms
 modules:
-- id: blink_led
-  name: BlinkLED
+- id: buzzer # 蜂鸣器告警模块实例
+  name: BuzzerAlarm # 模块类型
   constructor_args:
-    blink_cycle: 250
-- id: buzzer
-  name: BuzzerAlarm
+    alarm_freq: 1500 # 告警音频率，单位 Hz
+    alarm_duration: 300 # 单次鸣叫持续时间，单位 ms
+    alarm_delay: 300 # 两次鸣叫之间的间隔，单位 ms
+- id: ref # 裁判系统串口模块实例
+  name: Referee # 模块类型
   constructor_args:
-    alarm_freq: 1500
-    alarm_duration: 300
-    alarm_delay: 300
-- id: ref
-  name: Referee
+    task_stack_depth_uart: 1536 # 裁判串口接收任务栈深度，单位字节
+    uart: uart_referee # 裁判系统所接 UART 名称
+    baudrate: 115200 # 裁判系统串口波特率
+    referee_chassis_tp_name: chassis_ref # 发布底盘裁判数据的主题名
+    referee_launcher_tp_name: launcher_ref # 发布发射机构裁判数据的主题名
+    referee_robot_game_tp_name: sentry_ref # 发布哨兵机器人比赛状态的主题名
+    referee_radar_tp_name: radar_ref # 发布雷达裁判数据的主题名
+    thread_priority_uart: LibXR::Thread::Priority::MEDIUM # 裁判串口任务优先级
+- id: SentryProtocol_0 # 哨兵比赛协议处理模块实例
+  name: SentryProtocol # 模块类型
   constructor_args:
-    task_stack_depth_uart: 1536
-    uart: uart_referee
-    baudrate: 115200
-    referee_chassis_tp_name: chassis_ref
-    referee_launcher_tp_name: launcher_ref
-    referee_robot_game_tp_name: sentry_ref
-    referee_radar_tp_name: radar_ref
-    thread_priority_uart: LibXR::Thread::Priority::MEDIUM
-- id: SentryProtocol_0
-  name: SentryProtocol
+    referee: '@&ref' # 裁判系统模块引用
+    referee_sentry_tp_name: sentry_ref # 订阅的哨兵裁判状态主题
+    buy_bullet_topic_name: sentry_buy_bullet_num # 发布购弹数量的主题名
+    remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times # 发布远程购弹次数的主题名
+    remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times # 发布远程购买血量次数的主题名
+    buy_resurrection_topic_name: sentry_buy_resurrection # 发布购买复活指令的主题名
+    state_topic_name: sentry_state # 发布哨兵协议状态的主题名
+- id: cmd # 控制指令分发模块实例
+  name: CMD # 模块类型
   constructor_args:
-    referee: '@&ref'
-    referee_sentry_tp_name: sentry_ref
-    buy_bullet_topic_name: sentry_buy_bullet_num
-    remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times
-    remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times
-    buy_resurrection_topic_name: sentry_buy_resurrection
-    state_topic_name: sentry_state
-- id: cmd
-  name: CMD
+    mode: CMD::Mode::CMD_OP_CTRL # 默认控制模式：操作手控制
+    chassis_cmd_topic_name: chassis_cmd # 发布底盘控制指令的主题名
+    gimbal_cmd_topic_name: gimbal_cmd # 发布云台控制指令的主题名
+    launcher_cmd_topic_name: launcher_cmd # 发布发射机构控制指令的主题名
+    dispatch_task_stack_depth: 1024 # 指令分发任务栈深度，单位字节
+    dispatch_thread_priority: LibXR::Thread::Priority::HIGH # 指令分发任务优先级
+- id: super_power # 超级电容模块实例
+  name: SuperPower # 模块类型
   constructor_args:
-    mode: CMD::Mode::CMD_OP_CTRL
-    chassis_cmd_topic_name: chassis_cmd
-    gimbal_cmd_topic_name: gimbal_cmd
-    launcher_cmd_topic_name: launcher_cmd
-    dispatch_task_stack_depth: 1024
-    dispatch_thread_priority: LibXR::Thread::Priority::HIGH
-- id: super_power
-  name: SuperPower
+    can_bus_name: can2 # 超级电容所接 CAN 总线
+- id: power_control # 底盘功率控制模块实例
+  name: PowerControl # 模块类型
   constructor_args:
-    can_bus_name: can2
-- id: power_control
-  name: PowerControl
-  constructor_args:
-    superpower: '@&super_power'
-    chassis_static_power_loss: 5.5
-    motor_count_3508: 4
-    motor_count_6020: 0
-- id: motor_wheel_0
-  name: RMMotor
+    superpower: '@&super_power' # 超级电容模块引用
+    chassis_static_power_loss: 2.78 # RM2024 k3 底盘固定功耗，单位 W
+    reduction_ratio_3508: 19.0 # M3508 电机组减速比（轮侧模型）
+    motor_count_3508: 4 # 参与功率预算的 M3508 电机数量
+    motor_count_6020: 0 # 参与功率预算的 GM6020 电机数量
+- id: motor_wheel_0 # 0 号驱动轮电机；编号须与底盘运动学的轮位一致
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_M3508
-      reverse: false
-      feedback_id: 516
-      can_bus_name: can1
-- id: motor_wheel_1
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_M3508 # 电机型号
+      reverse: true # true 时反转控制与反馈方向
+      feedback_id: 513 # 电机 CAN 反馈 ID（0x204）
+      can_bus_name: can1 # 电机所接 CAN 总线
+- id: motor_wheel_1 # 1 号驱动轮电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_M3508
-      reverse: false
-      feedback_id: 513
-      can_bus_name: can1
-- id: motor_wheel_2
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_M3508 # 电机型号
+      reverse: true # true 时反转控制与反馈方向
+      feedback_id: 514 # 电机 CAN 反馈 ID（0x201）
+      can_bus_name: can1 # 电机所接 CAN 总线
+- id: motor_wheel_2 # 2 号驱动轮电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_M3508
-      reverse: true
-      feedback_id: 514
-      can_bus_name: can1
-- id: motor_wheel_3
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_M3508 # 电机型号
+      reverse: true # 该轮安装方向与正方向相反
+      feedback_id: 515 # 电机 CAN 反馈 ID（0x202）
+      can_bus_name: can1 # 电机所接 CAN 总线
+- id: motor_wheel_3 # 3 号驱动轮电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_M3508
-      reverse: false
-      feedback_id: 515
-      can_bus_name: can1
-- id: motor_steer_0
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_M3508 # 电机型号
+      reverse: true # true 时反转控制与反馈方向
+      feedback_id: 516 # 电机 CAN 反馈 ID（0x203）
+      can_bus_name: can1 # 电机所接 CAN 总线
+- id: motor_steer_0 # 0 号舵向电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_NONE
-      reverse: false
-      feedback_id: 520
-      can_bus_name: can2
-- id: motor_steer_1
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_NONE # 未限定型号，按 CAN 反馈通用模式驱动
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 520 # 电机 CAN 反馈 ID（0x208）
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: motor_steer_1 # 1 号舵向电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_NONE
-      reverse: false
-      feedback_id: 517
-      can_bus_name: can2
-- id: motor_steer_2
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_NONE # 未限定型号，按 CAN 反馈通用模式驱动
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 517 # 电机 CAN 反馈 ID（0x205）
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: motor_steer_2 # 2 号舵向电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_NONE
-      reverse: false
-      feedback_id: 518
-      can_bus_name: can2
-- id: motor_steer_3
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_NONE # 未限定型号，按 CAN 反馈通用模式驱动
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 518 # 电机 CAN 反馈 ID（0x206）
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: motor_steer_3 # 3 号舵向电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_NONE
-      reverse: false
-      feedback_id: 519
-      can_bus_name: can2
-- id: chassis
-  name: Chassis
+      model: RMMotor::Model::MOTOR_NONE # 未限定型号，按 CAN 反馈通用模式驱动
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 519 # 电机 CAN 反馈 ID（0x207）
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: chassis # 四舵轮底盘控制模块实例
+  name: Chassis # 模块类型
   constructor_args:
-    motor_wheel_0: '@&motor_wheel_0'
-    motor_wheel_1: '@&motor_wheel_1'
-    motor_wheel_2: '@&motor_wheel_2'
-    motor_wheel_3: '@&motor_wheel_3'
-    motor_steer_0: '@&motor_steer_0'
-    motor_steer_1: '@&motor_steer_1'
-    motor_steer_2: '@&motor_steer_2'
-    motor_steer_3: '@&motor_steer_3'
-    cmd: '@&cmd'
-    power_control: '@&power_control'
-    referee: '@&ref'
-    task_stack_depth: 2048
+    motor_wheel_0: '@&motor_wheel_0' # 0 号驱动轮电机引用
+    motor_wheel_1: '@&motor_wheel_1' # 1 号驱动轮电机引用
+    motor_wheel_2: '@&motor_wheel_2' # 2 号驱动轮电机引用
+    motor_wheel_3: '@&motor_wheel_3' # 3 号驱动轮电机引用
+    motor_steer_0: '@&motor_steer_0' # 0 号舵向电机引用
+    motor_steer_1: '@&motor_steer_1' # 1 号舵向电机引用
+    motor_steer_2: '@&motor_steer_2' # 2 号舵向电机引用
+    motor_steer_3: '@&motor_steer_3' # 3 号舵向电机引用
+    cmd: '@&cmd' # 底盘控制指令来源
+    power_control: '@&power_control' # 功率限制与超级电容控制来源
+    referee: '@&ref' # 裁判系统数据来源
+    task_stack_depth: 2048 # 底盘控制任务栈深度，单位字节
     ChassisParam:
-      wheel_radius: 0.07
-      wheel_to_center: 0.31
-      gravity_height: 0.0
-      reduction_ratio: 14
-      wheel_resistance: 0.0
-      error_compensation: 0.0
-      gravity: 83.692
-      width: 0.0
-      length: 0.0
-      rotor_speed_scale: 0.95
-      rotor_omega_min_scale: 0.55
-      rotor_buffer_low_j: 35.0
-      rotor_buffer_high_j: 70.0
-      rotor_scale_lpf_alpha: 0.2
-      telemetry_feedback_max_age_ms: 30
-      telemetry_max_sample_skew_ms: 3
+      wheel_radius: 0.075 # 车轮半径，单位 m
+      wheel_to_center: 0.245 # 车轮转向轴到车体中心距离，单位 m
+      gravity_height: 0.0 # 重心相对地面的高度，单位 m；未建模时为 0
+      reduction_ratio: 19 # 驱动轮减速比（电机转速/车轮转速）
+      wheel_resistance: 0.0 # 轮地阻力补偿系数；未启用时为 0
+      error_compensation: 0.0 # 运动学误差补偿系数；未启用时为 0
+      gravity: 0.0 # 整车重力，单位 N
+      width: 0.347 # 车体宽度，单位 m；当前模型未使用
+      length: 0.347 # 车体长度，单位 m；当前模型未使用
+      rotor_speed_scale: 0.95 # 小陀螺模式速度缩放上限
+      rotor_omega_min_scale: 0.55 # 小陀螺模式低角速度时的最小缩放比例
+      rotor_buffer_low_j: 35.0 # 小陀螺降速开始的底盘功率缓冲能量阈值，单位 J
+      rotor_buffer_high_j: 70.0 # 小陀螺恢复全速的底盘功率缓冲能量阈值，单位 J
+      rotor_scale_lpf_alpha: 0.2 # 小陀螺速度缩放低通滤波系数，范围 [0, 1]
+    # PID 通用项：k 为总缩放系数；p/i/d 为三项增益；i_limit、out_limit 为 0 时通常表示不限制；cycle 表示误差按角度周期回绕。
     pid_follow_:
-      k: 1
-      p: 1.0
-      i: 0.0
-      d: 0.0
-      i_limit: 0.0
-      out_limit: 0.0
-      cycle: true
-    pid_velocity_x_:
-      k: 0.0015
+      k: 1.0 # 跟随环总缩放系数
+      p: 2.5 # 跟随环比例增益
+      i: 0.0 # 跟随环积分增益
+      d: 0.0 # 跟随环微分增益
+      i_limit: 0.0 # 跟随环积分限幅
+      out_limit: 0.0 # 跟随环输出限幅
+      cycle: true # 跟随角度误差使用周期回绕
+    pid_velocity_x_: # 车体 X 向速度闭环
+      k: 1.0
       p: 14.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_velocity_y_:
-      k: 0.0015
+    pid_velocity_y_: # 车体 Y 向速度闭环
+      k: 1.0
       p: 14.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_omega_:
-      k: 0.0465
+    pid_omega_: # 车体偏航角速度闭环
+      k: 1.0
       p: 30.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_speed_0_:
-      k: 0.001
-      p: 5.0
+    pid_wheel_speed_0_: # 0 号驱动轮速度闭环
+      k: 1.0
+      p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_speed_1_:
-      k: 0.001
-      p: 5.0
+    pid_wheel_speed_1_: # 1 号驱动轮速度闭环
+      k: 1.0
+      p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_speed_2_:
-      k: 0.001
-      p: 5.0
+    pid_wheel_speed_2_: # 2 号驱动轮速度闭环
+      k: 1.0
+      p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_wheel_speed_3_:
-      k: 0.001
-      p: 5.0
+    pid_wheel_speed_3_: # 3 号驱动轮速度闭环
+      k: 1.0
+      p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_steer_angle_0_:
+    pid_steer_angle_0_: # 0 号舵向角度闭环
       k: 1.0
       p: 50.0
       i: 0.0
@@ -220,7 +216,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: true
-    pid_steer_angle_1_:
+    pid_steer_angle_1_: # 1 号舵向角度闭环
       k: 1.0
       p: 50.0
       i: 0.0
@@ -228,7 +224,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: true
-    pid_steer_angle_2_:
+    pid_steer_angle_2_: # 2 号舵向角度闭环
       k: 1.0
       p: 50.0
       i: 0.0
@@ -236,7 +232,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: true
-    pid_steer_angle_3_:
+    pid_steer_angle_3_: # 3 号舵向角度闭环
       k: 1.0
       p: 50.0
       i: 0.0
@@ -244,7 +240,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: true
-    pid_steer_speed_0_:
+    pid_steer_speed_0_: # 0 号舵向电机速度闭环
       k: 1.0
       p: 0.15
       i: 0.0
@@ -252,7 +248,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_steer_speed_1_:
+    pid_steer_speed_1_: # 1 号舵向电机速度闭环
       k: 1.0
       p: 0.15
       i: 0.0
@@ -260,7 +256,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_steer_speed_2_:
+    pid_steer_speed_2_: # 2 号舵向电机速度闭环
       k: 1.0
       p: 0.15
       i: 0.0
@@ -268,7 +264,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_steer_speed_3_:
+    pid_steer_speed_3_: # 3 号舵向电机速度闭环
       k: 1.0
       p: 0.15
       i: 0.0
@@ -276,21 +272,22 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    thread_priority: LibXR::Thread::Priority::HIGH
+    thread_priority: LibXR::Thread::Priority::HIGH # 底盘控制任务优先级
   template_args:
-    ChassisType: Omni
-- id: BMI088_0
-  name: BMI088
+    ChassisType: Omni # 底盘运动学类型：全向四舵轮
+- id: BMI088_0 # 底盘 IMU 模块实例
+  name: BMI088 # Bosch BMI088 IMU 模块类型
   constructor_args:
-    gyro_freq: BMI088::GyroFreq::GYRO_1000HZ_BW116HZ
-    accl_freq: BMI088::AcclFreq::ACCL_800HZ
-    gyro_range: BMI088::GyroRange::DEG_2000DPS
-    accl_range: BMI088::AcclRange::ACCL_24G
+    gyro_freq: BMI088::GyroFreq::GYRO_1000HZ_BW116HZ # 陀螺仪采样率与带宽
+    accl_freq: BMI088::AcclFreq::ACCL_800HZ # 加速度计采样率
+    gyro_range: BMI088::GyroRange::DEG_2000DPS # 陀螺仪量程，单位 deg/s
+    accl_range: BMI088::AcclRange::ACCL_24G # 加速度计量程，单位 g
     rotation:
-      w: 1.0
-      x: 0.0
-      y: 0.0
-      z: 0.0
+      w: 1.0 # 传感器坐标系到车体坐标系的旋转四元数 w
+      x: 0.0 # 传感器坐标系到车体坐标系的旋转四元数 x
+      y: 0.0 # 传感器坐标系到车体坐标系的旋转四元数 y
+      z: 0.0 # 传感器坐标系到车体坐标系的旋转四元数 z；当前为单位旋转
+    # IMU 恒温 PID；参数含义与底盘 PID 相同，cycle=false 表示非角度环。
     pid_param:
       k: 1.0
       p: 0.35
@@ -299,28 +296,37 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    gyro_topic_name: chassis_gyro
-    accl_topic_name: chassis_accl
-    target_temperature: 45
-    task_stack_depth: 1536
-- id: dual_board
-  name: DualBoard
-  template_args:
-    ROLE: DualBoardRole::CHASSIS
-    ChassisType: Omni
+    gyro_topic_name: chassis_gyro # 发布底盘角速度数据的主题名
+    accl_topic_name: chassis_accl # 发布底盘加速度数据的主题名
+    target_temperature: 45 # IMU 加热恒温目标，单位摄氏度
+    task_stack_depth: 1536 # IMU 任务栈深度，单位字节
+- id: chassis_ahrs # 底盘板 AHRS 姿态解算
+  name: MadgwickAHRS # 模块类型
   constructor_args:
-    can_bus_name: can2
-    tx_id: 0x311
-    rx_id: 0x312
-    rx_buffer_size: 256
-    tx_slot_count: 8
-    offline_timeout_ms: 100
-    chassis: '@&chassis'
-    mode_topic_name: dualboard_chassis_mode
-    cmd: '@nullptr'
-    sentry_buy_bullet_num_topic_name: sentry_buy_bullet_num
-    sentry_remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times
-    sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times
-    sentry_buy_resurrection_topic_name: sentry_buy_resurrection
-    sentry_state_topic_name: sentry_state
-    wheel_telemetry_topic_name: chassis_wheel_telemetry
+    beta: 0.05 # Madgwick 融合增益
+    gyro_topic_name: chassis_gyro # 底盘陀螺仪输入
+    accl_topic_name: chassis_accl # 底盘加速度输入
+    quaternion_topic_name: chassis_ahrs_quaternion # 底盘姿态四元数
+    euler_topic_name: chassis_euler # 底盘欧拉角，供 DualBoard 提取 yaw
+    task_stack_depth: 2048 # 姿态任务栈深度，单位字节
+- id: dual_board # 底盘与云台控制板 CAN 通信模块实例
+  name: DualBoard # 模块类型
+  template_args:
+    ROLE: DualBoardRole::CHASSIS # 本板角色：底盘板
+    ChassisType: Omni # 与对端保持一致的底盘类型
+  constructor_args:
+    can_bus_name: can2 # 板间通信 CAN 总线
+    tx_id: 0x311 # 发往云台板的 CAN 扩展帧 ID，须与云台 rx_id 对应
+    rx_id: 0x312 # 接收云台板数据的 CAN 扩展帧 ID，须与云台 tx_id 对应
+    rx_buffer_size: 256 # 接收缓冲区大小，单位字节
+    offline_timeout_ms: 100 # 超过此时间未收到对端数据则判离线，单位 ms
+    chassis: '@&chassis' # 本板底盘模块引用，用于执行对端下发的模式
+    mode_topic_name: dualboard_chassis_mode # 同步底盘模式的共享主题名
+    cmd: '@nullptr' # 底盘板不持有 CMD 模块，置空
+    sentry_buy_bullet_num_topic_name: sentry_buy_bullet_num # 同步购弹数量的主题名
+    sentry_remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times # 同步远程购弹次数的主题名
+    sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times # 同步远程购买血量次数的主题名
+    sentry_buy_resurrection_topic_name: sentry_buy_resurrection # 同步购买复活指令的主题名
+    sentry_state_topic_name: sentry_state # 同步哨兵协议状态的主题名
+    chassis_euler_topic_name: chassis_euler # 底盘 AHRS 欧拉角主题
+    power_control: '@&power_control' # 电容遥测来源

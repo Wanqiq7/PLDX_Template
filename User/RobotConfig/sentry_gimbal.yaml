@@ -1,30 +1,27 @@
 global_settings:
-  monitor_sleep_ms: 1000
+  monitor_sleep_ms: 1000 # 模块监控轮询周期，单位 ms
 modules:
-- id: blink_led
-  name: BlinkLED
+- id: buzzer # 蜂鸣器告警模块
+  name: BuzzerAlarm # 模块类型
   constructor_args:
-    blink_cycle: 250
-- id: buzzer
-  name: BuzzerAlarm
+    alarm_freq: 1500 # 告警频率，单位 Hz
+    alarm_duration: 300 # 单次鸣叫时长，单位 ms
+    alarm_delay: 300 # 鸣叫间隔，单位 ms
+- id: BMI088_0 # 云台 IMU 模块
+  name: BMI088 # Bosch BMI088 IMU 模块类型
   constructor_args:
-    alarm_freq: 1500
-    alarm_duration: 300
-    alarm_delay: 300
-- id: BMI088_0
-  name: BMI088
-  constructor_args:
-    gyro_freq: BMI088::GyroFreq::GYRO_1000HZ_BW116HZ
-    accl_freq: BMI088::AcclFreq::ACCL_800HZ
-    gyro_range: BMI088::GyroRange::DEG_2000DPS
-    accl_range: BMI088::AcclRange::ACCL_24G
+    gyro_freq: BMI088::GyroFreq::GYRO_1000HZ_BW116HZ # 陀螺仪采样率与带宽
+    accl_freq: BMI088::AcclFreq::ACCL_800HZ # 加速度计采样率
+    gyro_range: BMI088::GyroRange::DEG_2000DPS # 陀螺仪量程，单位 deg/s
+    accl_range: BMI088::AcclRange::ACCL_24G # 加速度计量程，单位 g
     rotation:
       # BMI088/C-board USB faces vehicle +X. Convert sensor S to body B:
       # R_BS = [[0, 1, 0], [-1, 0, 0], [0, 0, 1]].
-      w: 0.70710678
-      x: 0.0
-      y: 0.0
-      z: -0.70710678
+      w: 0.70710678 # 传感器坐标系到车体坐标系旋转四元数 w
+      x: 0.0 # 传感器坐标系到车体坐标系旋转四元数 x
+      y: 0.0 # 传感器坐标系到车体坐标系旋转四元数 y
+      z: -0.70710678 # 传感器坐标系到车体坐标系旋转四元数 z
+    # 恒温 PID：k 为总缩放；p/i/d 为增益；i_limit/out_limit 为限幅；cycle=false 表示非周期量。
     pid_param:
       k: 1.0
       p: 0.35
@@ -33,56 +30,68 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    gyro_topic_name: gimbal_gyro
-    accl_topic_name: gimbal_accl
-    target_temperature: 45
-    task_stack_depth: 1536
-- id: ahrs
-  name: MadgwickAHRS
+    gyro_topic_name: gimbal_gyro # 发布云台角速度的主题名
+    accl_topic_name: gimbal_accl # 发布云台加速度的主题名
+    target_temperature: 45 # IMU 恒温目标，单位摄氏度
+    task_stack_depth: 1536 # IMU 任务栈深度，单位字节
+- id: ahrs # Madgwick 姿态解算模块
+  name: MadgwickAHRS # 模块类型
   constructor_args:
-    beta: 0.05
-    gyro_topic_name: gimbal_gyro
-    accl_topic_name: gimbal_accl
-    quaternion_topic_name: ahrs_quaternion
-    euler_topic_name: gimbal_euler
-    task_stack_depth: 2048
-- id: cmd
-  name: CMD
+    beta: 0.05 # Madgwick 融合增益，越大越快收敛但越易受加速度扰动
+    gyro_topic_name: gimbal_gyro # 订阅 IMU 角速度主题
+    accl_topic_name: gimbal_accl # 订阅 IMU 加速度主题
+    quaternion_topic_name: ahrs_quaternion # 发布姿态四元数主题
+    euler_topic_name: gimbal_euler # 发布欧拉角主题
+    task_stack_depth: 2048 # 姿态解算任务栈深度，单位字节
+- id: ref # 裁判系统数据解析模块
+  name: Referee # 模块类型
   constructor_args:
-    mode: CMD::Mode::CMD_OP_CTRL
-    chassis_cmd_topic_name: chassis_cmd
-    gimbal_cmd_topic_name: gimbal_cmd
-    launcher_cmd_topic_name: launcher_cmd
-    dispatch_task_stack_depth: 1024
-    dispatch_thread_priority: LibXR::Thread::Priority::HIGH
-- id: dr16
-  name: DR16
+    task_stack_depth_uart: 1536 # 裁判系统串口任务栈深度，单位字节
+    uart: uart_referee # 裁判系统串口
+    baudrate: 115200 # 裁判系统串口波特率
+    referee_chassis_tp_name: chassis_ref # 底盘裁判状态主题
+    referee_launcher_tp_name: launcher_ref # 发射机构裁判状态主题
+    referee_robot_game_tp_name: sentry_ref # 哨兵机器人比赛状态主题
+    referee_radar_tp_name: radar_ref # 雷达裁判状态主题
+    thread_priority_uart: LibXR::Thread::Priority::MEDIUM # 串口任务优先级
+- id: cmd # 控制指令分发模块
+  name: CMD # 模块类型
   constructor_args:
-    CMD: '@cmd'
-    task_stack_depth_uart: 1536
-    thread_priority_uart: LibXR::Thread::Priority::MEDIUM
-- id: motor_yaw
-  name: RMMotor
+    mode: CMD::Mode::CMD_OP_CTRL # 默认控制模式：操作手控制
+    chassis_cmd_topic_name: chassis_cmd # 发布底盘控制指令的主题名
+    gimbal_cmd_topic_name: gimbal_cmd # 发布云台控制指令的主题名
+    launcher_cmd_topic_name: launcher_cmd # 发布发射机构控制指令的主题名
+    dispatch_task_stack_depth: 1024 # 指令分发任务栈深度，单位字节
+    dispatch_thread_priority: LibXR::Thread::Priority::HIGH # 指令分发任务优先级
+- id: dr16 # DR16 遥控器接收模块
+  name: DR16 # 模块类型
+  constructor_args:
+    CMD: '@cmd' # CMD 模块引用（非 owning 引用写法）
+    task_stack_depth_uart: 1536 # 遥控器串口任务栈深度，单位字节
+    thread_priority_uart: LibXR::Thread::Priority::MEDIUM # 遥控器串口任务优先级
+- id: motor_yaw # 云台 yaw 轴 GM6020 电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_GM6020
-      reverse: false
-      feedback_id: 0x206
-      can_bus_name: can2
-- id: motor_pit
-  name: DMMotor
+      model: RMMotor::Model::MOTOR_GM6020 # 电机型号
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 0x209 # 电机 CAN 反馈 ID
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: motor_pit # 云台 pitch 轴达妙 DM4310 电机
+  name: RMMotor # 达妙 CAN 电机模块类型
   constructor_args:
     param:
-      model: DMMotor::Model::MOTOR_DM4310
-      reverse: false
-      can_id: 1
-      can_bus_name: can2
-- id: gimbal
-  name: Gimbal
+      model: RMMotor::Model::MOTOR_GM6020 # 电机型号
+      reverse: false # true 时反转控制与反馈方向
+      can_id: 0x205 # 电机节点 ID
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: gimbal # 云台控制模块
+  name: Gimbal # 模块类型
   constructor_args:
-    cmd: '@cmd'
-    task_stack_depth: 1536
-    pid_yaw_angle:
+    cmd: '@cmd' # 云台控制指令来源
+    task_stack_depth: 1536 # 云台控制任务栈深度，单位字节
+    # PID 通用项：k 为总缩放；p/i/d 为增益；i_limit/out_limit 为限幅；cycle=true 时误差按角度周期回绕。
+    pid_yaw_angle: # yaw 角度外环
       k: 1.0
       p: 1.0
       i: 0.0
@@ -90,7 +99,7 @@ modules:
       i_limit: 0.015
       out_limit: 0.0
       cycle: true
-    pid_yaw_omega:
+    pid_yaw_omega: # yaw 角速度内环
       k: 1.0
       p: 1.0
       i: 0.0
@@ -98,15 +107,15 @@ modules:
       i_limit: 0.0
       out_limit: 2.223
       cycle: false
-    pid_pit_angle:
-      k: 1
+    pid_pit_angle: # pitch 角度外环
+      k: 1.0
       p: 1.0
       i: 0.0
       d: 0.0
       i_limit: 0.0
       out_limit: 0
       cycle: true
-    pid_pit_omega:
+    pid_pit_omega: # pitch 角速度内环
       k: 1.0
       p: 1.0
       i: 0.0
@@ -114,101 +123,122 @@ modules:
       i_limit: 0.0
       out_limit: 10.0
       cycle: false
-    motor_pitch: '@&motor_pit'
-    motor_yaw: '@&motor_yaw'
-    pit_max_angle: 1.8
-    pit_min_angle: 0.5
-    pit_lc: 0.6
-    pit_theta: -0.1
-    yaw_k: 0.0
-    j_pit: 0.014
-    j_yaw: 0.03
-    pit_zero: 0.8
-    yaw_zero: 2.80320096
-    patrol_pitch_amplitude_rad: 0.455
-    patrol_pitch_angular_rate_rad_s: 10.0
-    patrol_yaw_rate_rad_s: 1.0
-    reverse_flag: true
-    thread_priority: LibXR::Thread::Priority::HIGH
-    rotor_ff_enabled: false
+    motor_pitch: '@&motor_pit' # pitch 轴电机引用
+    motor_yaw: '@&motor_yaw' # yaw 轴电机引用
+    pit_max_angle: 1.8 # pitch 机械上限角，单位 rad
+    pit_min_angle: 0.5 # pitch 机械下限角，单位 rad
+    pit_lc: 0.6 # pitch 重力补偿力臂/系数，需按机构标定
+    pit_theta: -0.1 # pitch 重力补偿相位偏置，单位 rad
+    yaw_k: 0.0 # yaw 重力/耦合补偿系数；0 表示未启用
+    j_pit: 0.014 # pitch 轴等效转动惯量，单位 kg*m^2
+    j_yaw: 0.03 # yaw 轴等效转动惯量，单位 kg*m^2
+    pit_zero: 0.8 # pitch 零位偏置，单位 rad
+    yaw_zero: 4.78755426 # yaw 零位偏置，单位 rad
+    patrol_pitch_amplitude_rad: 0.455 # 巡逻扫描的 pitch 振幅，单位 rad
+    patrol_pitch_angular_rate_rad_s: 10.0 # 巡逻扫描的 pitch 角速度，单位 rad/s
+    patrol_yaw_rate_rad_s: 1.0 # 巡逻扫描的 yaw 角速度，单位 rad/s
+    reverse_flag: true # 云台坐标/安装方向反向标志，须与机械安装一致
+    thread_priority: LibXR::Thread::Priority::HIGH # 云台控制任务优先级
+    rotor_ff_enabled: false # 是否启用小陀螺状态下的前馈补偿
+    yaw_manual_controller: YawManualController::SMC # 手动 Yaw：PID 或 SMC
+    yaw_ai_controller: YawAiController::SMC # 自瞄 Yaw：SMC 或 LQR_ESO
+    # yaw LQR/ESO 力矩控制参数；即使当前未选用，保留参数便于切回。
     yaw_lqr_eso:
-      b_nms_rad: 0.0
-      k_theta: 1.0
-      k_omega: 1.0
-      k_i: 0.2
-      theta_integral_limit_rad_s: 0.5
-      tau_coulomb_nm: 0.05
-      coulomb_smooth_rad_s: 0.2
-      eso_bandwidth_rad_s: 30.0
-      eso_comp_gain: 1.0
-      eso_comp_limit_nm: 0.3
-      eso_omega_gate_rad_s: 5.0
-      eso_alpha_gate_rad_s2: 50.0
-      tau_bias_ki: 0.5
-      tau_bias_limit_nm: 0.15
-      tau_meas_lpf_alpha: 0.1
-      theta_deadband_rad: 0.0
-      torque_soft_limit_nm: 2.0
-      torque_slew_rate_nm_s: 1000.0
-      eso_enable: true
-      eso_comp_enable: false
-      coulomb_enable: false
-      lqi_enable: false
-      torque_bias_enable: false
-      torque_slew_enable: true
-- id: dual_board
-  name: DualBoard
+      b_nms_rad: 0.0 # 被控对象力矩增益，单位 N*m/rad；0 表示使用默认/未标定值
+      k_theta: 1.0 # LQR 角度误差反馈增益
+      k_omega: 1.0 # LQR 角速度误差反馈增益
+      k_i: 0.2 # LQI 角度误差积分增益
+      theta_integral_limit_rad_s: 0.5 # 角度积分状态限幅，单位 rad*s
+      tau_coulomb_nm: 0.05 # 库仑摩擦补偿力矩，单位 N*m
+      coulomb_smooth_rad_s: 0.2 # 库仑摩擦符号函数平滑速度，单位 rad/s
+      eso_bandwidth_rad_s: 30.0 # 扩张状态观测器带宽，单位 rad/s
+      eso_comp_gain: 1.0 # ESO 扰动补偿增益
+      eso_comp_limit_nm: 0.3 # ESO 扰动补偿力矩限幅，单位 N*m
+      eso_omega_gate_rad_s: 5.0 # 高于此角速度时禁止/抑制 ESO 补偿，单位 rad/s
+      eso_alpha_gate_rad_s2: 50.0 # 高于此角加速度时禁止/抑制 ESO 补偿，单位 rad/s^2
+      tau_bias_ki: 0.5 # 恒定力矩偏置估计积分增益
+      tau_bias_limit_nm: 0.15 # 恒定力矩偏置估计限幅，单位 N*m
+      tau_meas_lpf_alpha: 0.1 # 力矩测量低通滤波系数，范围 [0, 1]
+      theta_deadband_rad: 0.0 # 角度误差死区，单位 rad
+      torque_soft_limit_nm: 2.0 # 力矩软限幅，单位 N*m
+      torque_slew_rate_nm_s: 1000.0 # 力矩变化率限幅，单位 N*m/s
+      eso_enable: true # 启用 ESO 状态估计
+      eso_comp_enable: false # 启用 ESO 扰动补偿输出
+      coulomb_enable: false # 启用库仑摩擦补偿
+      lqi_enable: false # 启用含积分项的 LQI 控制
+      torque_bias_enable: false # 启用恒定力矩偏置补偿
+      torque_slew_enable: true # 启用力矩变化率限制
+    # yaw 滑模力矩控制参数；c/K/epsilon 为上电初值，实车需重调。
+    yaw_smc:
+      j_kg_m2: 0.041 # yaw 轴等效转动惯量，单位 kg*m^2
+      c: 12.0 # 滑模面系数，单位 1/s
+      k: 30.0 # 线性趋近项系数，单位 1/s
+      epsilon: 0.5 # 切换项系数，单位 rad/s^2
+      q: 21.0 # 终端滑模指数分子
+      p: 27.0 # 终端滑模指数分母，须大于 q
+      error_deadband_rad: 0.0 # 角度误差死区，单位 rad
+      ftsmc_switch_rad: 0.25 # 小于该误差时切回线性滑模，单位 rad
+      sat_boundary: 1.15 # sat(s/boundary) 边界层厚度
+      torque_soft_limit_nm: 2.0 # 力矩软限幅，单位 N*m
+      torque_min_nm: -2.5 # 力矩硬限幅下限，单位 N*m
+      torque_max_nm: 2.5 # 力矩硬限幅上限，单位 N*m
+      torque_slew_rate_nm_s: 1000.0 # 力矩变化率限幅，单位 N*m/s
+      ftsmc_enable: true # 启用快速终端滑模；关闭则全程线性滑模
+      torque_slew_enable: true # 启用力矩变化率限制
+- id: dual_board # 云台与底盘控制板 CAN 通信模块
+  name: DualBoard # 模块类型
   template_args:
-    ROLE: DualBoardRole::GIMBAL
-    ChassisType: Omni
+    ROLE: DualBoardRole::GIMBAL # 本板角色：云台板
+    ChassisType: Omni # 与底盘板保持一致的底盘类型
   constructor_args:
-    can_bus_name: can2
-    tx_id: 0x312
-    rx_id: 0x311
-    rx_buffer_size: 256
-    tx_slot_count: 8
-    offline_timeout_ms: 100
-    chassis: '@nullptr'
-    mode_topic_name: dualboard_chassis_mode
-    cmd: '@&cmd'
-    sentry_buy_bullet_num_topic_name: sentry_buy_bullet_num
-    sentry_remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times
-    sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times
-    sentry_buy_resurrection_topic_name: sentry_buy_resurrection
-    sentry_state_topic_name: sentry_state
-    wheel_telemetry_topic_name: chassis_wheel_telemetry
-- id: motor_trig
-  name: RMMotor
-  constructor_args:
-    param:
-      model: RMMotor::Model::MOTOR_M2006
-      reverse: false
-      feedback_id: 517
-      can_bus_name: can1
-- id: motor_fric_0
-  name: RMMotor
+    can_bus_name: can2 # 板间通信 CAN 总线
+    tx_id: 0x312 # 发往底盘板的 CAN 扩展帧 ID，须与底盘 rx_id 对应
+    rx_id: 0x311 # 接收底盘板数据的 CAN 扩展帧 ID，须与底盘 tx_id 对应
+    rx_buffer_size: 256 # 接收缓冲区大小，单位字节
+    offline_timeout_ms: 100 # 对端离线判定超时，单位 ms
+    chassis: '@nullptr' # 云台板不直接持有底盘模块，置空
+    mode_topic_name: dualboard_chassis_mode # 发布/订阅底盘模式的共享主题名
+    cmd: '@&cmd' # 本板 CMD 模块引用
+    sentry_buy_bullet_num_topic_name: sentry_buy_bullet_num # 同步购弹数量的主题名
+    sentry_remote_buy_bullet_times_topic_name: sentry_remote_buy_bullet_times # 同步远程购弹次数的主题名
+    sentry_remote_buy_hp_times_topic_name: sentry_remote_buy_hp_times # 同步远程购买血量次数的主题名
+    sentry_buy_resurrection_topic_name: sentry_buy_resurrection # 同步购买复活指令的主题名
+    sentry_state_topic_name: sentry_state # 同步哨兵协议状态的主题名
+    chassis_euler_topic_name: chassis_euler # 双板构建中底盘 AHRS 主题名
+    power_control: '@nullptr' # 云台板无本地电容模块
+- id: motor_trig # 拨弹盘 M2006 电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_M3508
-      reverse: true
-      feedback_id: 513
-      can_bus_name: can2
-- id: motor_fric_1
-  name: RMMotor
+      model: RMMotor::Model::MOTOR_M2006 # 电机型号
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 517 # 电机 CAN 反馈 ID（0x205）
+      can_bus_name: can1 # 电机所接 CAN 总线
+- id: motor_fric_0 # 左侧/前左摩擦轮 M3508 电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
     param:
-      model: RMMotor::Model::MOTOR_M3508
-      reverse: false
-      feedback_id: 515
-      can_bus_name: can2
-- id: launcher
-  name: InfantryLauncher
+      model: RMMotor::Model::MOTOR_M3508 # 电机型号
+      reverse: true # 对消双摩擦轮安装方向
+      feedback_id: 513 # 电机 CAN 反馈 ID（0x201）
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: motor_fric_1 # 右侧/前右摩擦轮 M3508 电机
+  name: RMMotor # 大疆 CAN 电机模块类型
   constructor_args:
-    motor_fric_front_left: '@&motor_fric_0'
-    motor_fric_front_right: '@&motor_fric_1'
-    motor_trig: '@&motor_trig'
-    task_stack_depth: 1536
-    pid_trig_angle:
+    param:
+      model: RMMotor::Model::MOTOR_M3508 # 电机型号
+      reverse: false # true 时反转控制与反馈方向
+      feedback_id: 515 # 电机 CAN 反馈 ID（0x203）
+      can_bus_name: can2 # 电机所接 CAN 总线
+- id: launcher # 步兵发射机构控制模块
+  name: InfantryLauncher # 模块类型
+  constructor_args:
+    motor_fric_front_left: '@&motor_fric_0' # 左摩擦轮电机引用
+    motor_fric_front_right: '@&motor_fric_1' # 右摩擦轮电机引用
+    motor_trig: '@&motor_trig' # 拨弹盘电机引用
+    task_stack_depth: 1536 # 发射机构任务栈深度，单位字节
+    # PID 通用项：k 为总缩放；p/i/d 为增益；i_limit/out_limit 为限幅；cycle=false 表示非周期量。
+    pid_trig_angle: # 拨弹盘角度闭环
       k: 1.0
       p: 40.0
       i: 0.1
@@ -216,7 +246,7 @@ modules:
       i_limit: 0.0
       out_limit: 25.0
       cycle: false
-    pid_trig_speed:
+    pid_trig_speed: # 拨弹盘速度闭环
       k: 1.0
       p: 0.65
       i: 0.0
@@ -224,7 +254,7 @@ modules:
       i_limit: 0.0
       out_limit: 0.0
       cycle: false
-    pid_fric_speed_0:
+    pid_fric_speed_0: # 左摩擦轮速度闭环
       k: 1.0
       p: 0.002
       i: 0.0
@@ -232,7 +262,7 @@ modules:
       i_limit: 0.0
       out_limit: 1.0
       cycle: false
-    pid_fric_speed_1:
+    pid_fric_speed_1: # 右摩擦轮速度闭环
       k: 1.0
       p: 0.002
       i: 0.0
@@ -241,18 +271,23 @@ modules:
       out_limit: 1.0
       cycle: false
     launcher_param:
-      fric1_setpoint_speed: 6000.0
-      target_bullet_speed: 24.0
-      bullet_speed_tolerance: 1.5
-      trig_gear_ratio: 36
-      num_trig_tooth: 10
-    cmd: '@&cmd'
-    referee: '@nullptr'
-    thread_priority: LibXR::Thread::Priority::HIGH
-- id: event_binder
-  name: EventBinder
+      fric1_setpoint_speed: 6000.0 # 摩擦轮 1 目标转速，单位 rpm
+      target_bullet_speed: 24.0 # 目标弹速，单位 m/s
+      bullet_speed_tolerance: 1.5 # 弹速允许偏差，单位 m/s
+      trig_gear_ratio: 36 # 拨弹盘传动减速比
+      num_trig_tooth: 10 # 拨弹盘单圈对应的拨弹齿数
+    heat_control_enabled: true # 启用基于热量预算的射频限制
+    single_heat: 10.0 # 单发热量消耗
+    max_frequency: 15.0 # 最大发射频率，单位 Hz
+    burst_duration: 2.0 # 连发模式单次持续时间，单位 s
+    heat_margin: 10.0 # 预留热量安全边际
+    cmd: '@&cmd' # 发射控制指令来源
+    referee: '@nullptr' # 裁判数据由底盘板经 DualBoard 同步，故本地置空
+    thread_priority: LibXR::Thread::Priority::HIGH # 发射控制任务优先级
+- id: event_binder # 遥控器事件到各模块模式事件的绑定表
+  name: EventBinder # 模块类型
   constructor_args:
-    modules:
+    modules: # 可作为事件源或目标的模块注册表
     - name: dr16
       module_ref: '@dr16'
     - name: cmd
@@ -263,8 +298,8 @@ modules:
       module_ref: '@gimbal'
     - name: launcher
       module_ref: '@launcher'
-    event_binding_groups:
-    - bindings:
+    event_binding_groups: # 每组 bindings 在同一事件分发器中注册
+    - bindings: # 右拨杆：选择手动控制或自动控制模式
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_R_POS_TOP
         target_module: cmd
@@ -277,7 +312,7 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: cmd
         target_event: CMD::Mode::CMD_AUTO_CTRL
-    - bindings:
+    - bindings: # 左拨杆：经板间通信选择底盘松弛、跟随或小陀螺模式
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_L_POS_TOP
         target_module: dual_board
@@ -290,7 +325,7 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_L_POS_BOT
         target_module: dual_board
         target_event: Omni::ChassisMode::ROTOR
-    - bindings:
+    - bindings: # 右拨杆与 Q/E 键：选择云台和视觉模式
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_R_POS_TOP
         target_module: gimbal
@@ -302,8 +337,16 @@ modules:
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: gimbal
-        target_event: GimbalEvent::SET_MODE_AUTOPATROL
-    - bindings:
+        target_event: GimbalEvent::SET_VISION_AUTO_AIM
+      - source_module: dr16
+        source_event: DR16::Key::KEY_Q
+        target_module: gimbal
+        target_event: GimbalEvent::SET_VISION_SMALL_BUFF
+      - source_module: dr16
+        source_event: DR16::Key::KEY_E
+        target_module: gimbal
+        target_event: GimbalEvent::SET_VISION_BIG_BUFF
+    - bindings: # 拨杆：切换摩擦轮安全或准备状态
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_L_POS_TOP
         target_module: launcher
@@ -320,55 +363,47 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: launcher
         target_event: InfantryLauncher::LauncherEvent::SET_FRICMODE_READY
-- id: hostdata
-  name: HostData
+- id: nav_host_link # 导航主机串口数据桥接模块
+  name: NavHostLink # 模块类型
   constructor_args:
-    cmd: '@cmd'
-    host_gimbal_topic_name: target_euler
-    host_chassis_data_topic_name: nav_chassis_target_v1
-    host_fire_topic_name: fire_notify
-    task_stack_depth: 1024
-    thread_priority: LibXR::Thread::Priority::MEDIUM
-- id: nav_host_link
-  name: NavHostLink
+    cmd: '@cmd' # 导航与视觉命令统一写入 CMD
+    uart_name: usb_otg_hs_navigation_cdc # 与导航主机连接的 USB CDC
+    referee_topic_name: sentry_ref # 转发给导航端的裁判状态主题
+    pitch_topic_name: pitchmotor_angle # 转发给导航端的 pitch 电机角度主题
+    yaw_topic_name: yawmotor_angle # 转发给导航端的 yaw 电机角度主题
+    quaternion_topic_name: ahrs_quaternion # 转发给导航端的姿态四元数主题
+- id: nav_rx_shared_topic # 从导航串口接收共享主题的服务端
+  name: SharedTopic # 模块类型
   constructor_args:
-    uart_name: uart_ext_controller
-    referee_topic_name: sentry_ref
-    wheel_telemetry_topic_name: chassis_wheel_telemetry
-    pitch_topic_name: pitchmotor_angle
-    yaw_topic_name: yawmotor_angle
-    quaternion_topic_name: ahrs_quaternion
-- id: nav_rx_shared_topic
-  name: SharedTopic
+    uart_name: usb_otg_hs_navigation_cdc # 接收端 USB CDC，与导航端配置保持一致
+    buffer_size: 256 # 接收缓冲区大小，单位字节
+    topic_configs: # 允许从导航端写入本板的主题列表
+    - nav_data # 导航底盘速度/姿态目标
+    - behavior_data # 导航行为请求
+- id: nav_tx_shared_topic_client # 向导航串口发送共享主题的客户端
+  name: SharedTopicClient # 模块类型
   constructor_args:
-    uart_name: uart_ext_controller
-    buffer_size: 256
-    topic_configs:
-    - nav_chassis_target_v1
-    - nav_decision_cmd_v1
-- id: nav_tx_shared_topic_client
-  name: SharedTopicClient
+    uart_name: usb_otg_hs_navigation_cdc # 发送端 USB CDC，与导航端配置保持一致
+    slot_count: 32 # 发送队列槽位数
+    topic_configs: # 发送给导航端的主题列表
+    - team_info # 己方队伍成员位置与血量
+    - game_info # 比赛状态与敌方基地血量
+    - online_info # 本机在线裁判与位置状态
+    - offline_info # 双板底盘 yaw 与离线状态
+    - radar_info # 雷达摘要
+- id: vision_shared_topic # 从视觉上位机接收共享主题的服务端
+  name: SharedTopic # 模块类型
   constructor_args:
-    uart_name: uart_ext_controller
-    slot_count: 32
-    topic_configs:
-    - nav_gimbal_state_v1
-    - nav_referee_state_v1
-    - nav_wheel_telemetry_v1
-    - nav_link_status_v1
-- id: vision_shared_topic
-  name: SharedTopic
+    uart_name: usb_otg_hs_vision_cdc # 视觉上位机 USB CDC 串口
+    buffer_size: 256 # 接收缓冲区大小，单位字节
+    topic_configs: # 允许视觉端写入本板的主题列表
+    - target_euler # 视觉解算的云台目标欧拉角
+    - fire_notify # 视觉开火通知
+- id: vision_shared_topic_client # 向视觉上位机发送共享主题的客户端
+  name: SharedTopicClient # 模块类型
   constructor_args:
-    uart_name: usb_otg_hs_cdc
-    buffer_size: 256
-    topic_configs:
-    - target_euler
-    - fire_notify
-- id: vision_shared_topic_client
-  name: SharedTopicClient
-  constructor_args:
-    uart_name: usb_otg_hs_cdc
-    slot_count: 16
-    topic_configs:
-    - ahrs_quaternion
-    - nav_gimbal_feedback_v1
+    uart_name: usb_otg_hs_vision_cdc # 视觉上位机 USB CDC 串口
+    slot_count: 16 # 发送队列槽位数
+    topic_configs: # 发送给视觉端的主题列表
+    - ahrs_quaternion # 本机姿态四元数
+    - nav_gimbal_feedback # 导航/云台反馈数据

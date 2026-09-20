@@ -70,7 +70,6 @@ void MX_TIM1_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM10_Init(void);
 void MX_USART1_UART_Init(void);
-void MX_USART6_UART_Init(void);
 void MX_TIM7_Init(void);
 
 /* USER CODE BEGIN EFP */

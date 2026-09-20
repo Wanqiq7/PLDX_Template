@@ -1,70 +1,69 @@
-# Modules — Robot Functional Components
+# Modules — xrobot Robot Components
 
-## OVERVIEW
+## ROLE
 
-YAML-driven robot modules managed by xrobot. Each folder is an independent component (often its own git repo) providing sensor, actuator, or control logic.
+`Modules/` contains reusable robot components consumed by the YAML-driven xrobot application. Each module is an independent checkout with its own `CMakeLists.txt`; most implementations are header-only and expose a `LibXR::Application` or a small reusable C++ type.
 
-## STRUCTURE
+## INVENTORY
 
-```
-Modules/
-├── modules.yaml        # Module registry: org/name@branch for each module
-├── sources.yaml        # Remote index URLs (xrobot-org, qdu-future)
-├── CMakeLists.txt      # Auto-includes all */CMakeLists.txt
-├── Chassis/            # Omni, Mecanum, Helm chassis types (templated)
-├── Gimbal/             # 2-axis gimbal control (pitch/yaw)
-├── Launcher/           # Infantry/Hero launcher variants
-├── BMI088/             # IMU driver + temperature PID
-├── DR16/               # DJI remote control receiver
-├── CMD/                # Command routing (operator/auto mode switching)
-├── RMMotor/            # DJI RoboMaster motor protocol (M3508, GM6020, M2006)
-├── DMMotor/            # DM motor protocol
-├── Motor/              # Generic motor base
-├── MadgwickAHRS/       # Attitude estimation (quaternion/euler)
-├── EventBinder/        # Declarative event wiring between modules
-├── SharedTopic/        # Inter-device pub/sub over UART
-├── SharedTopicClient/  # Client-side shared topic
-├── HostData/           # Host computer data interface
-├── PowerControl/       # Power management with supercapacitor
-├── SuperPower/         # Supercapacitor CAN driver
-├── BlinkLED/           # Status LED blinker
-├── BuzzerAlarm/        # Buzzer notification
-├── Matrix/             # Matrix math utilities
-```
+Use the directory and module manifest as the source of truth. The current workspace contains:
+
+| Area | Modules |
+|------|---------|
+| Hardware and state estimation | `BMI088`, `IST8310`, `MadgwickAHRS`, `Motor`, `RMMotor`, `DMMotor`, `SuperPower` |
+| Robot motion | `Chassis` (`Omni`, `Mecanum`, `Helm`), `Gimbal` (`YawSmc`, `YawLqrEso`), `MiniGimbal`, `InfantryLauncher`, `HeroLauncher`, `PowerControl` |
+| Operator and control flow | `CMD`, `DR16`, `VT13`, `HostData`, `EventBinder`, `DebugCore` |
+| Board and external links | `DualBoard`, `SentryProtocol`, `NavLinkProtocol`, `NavHostLink`, `SharedTopic`, `SharedTopicClient`, `CameraSync` |
+| Robot services | `Referee`, `BlinkLED`, `BuzzerAlarm` |
+
+`Modules/modules.yaml` is the xrobot registry and may contain entries not present in the checkout. It currently lists `pldx/Dart`, while `Modules/Dart/` is absent; resolve that mismatch before depending on Dart. `Modules/sources.yaml` points at the PLDX module index (`GUET-PLDX/pldx-modules`).
 
 ## WHERE TO LOOK
 
 | Task | Location | Notes |
 |------|----------|-------|
-| Add new module | Create `Modules/<Name>/` with `.hpp` + `CMakeLists.txt` | Register in `modules.yaml` |
-| Download modules from registry | `xrobot_init_mod --config <url> --dir ./Modules` | Uses `sources.yaml` indexes |
-| Understand module wiring | `User/RobotConfig/*.yaml` | `@&id` references link modules |
-| Chassis type selection | `Chassis/Omni.hpp`, `Helm.hpp`, `Mecanum.hpp` | Selected via `template_args.ChassisType` in YAML |
-| Launcher type selection | `Launcher/InfantryLauncher.hpp`, `HeroLauncher.hpp` | Selected via `template_args.LauncherType` |
+| Change robot composition or constructor wiring | `User/RobotConfig/*.yaml` | `module`, `entry_header`, `constructor_args`, and `template_args` are generated from these files |
+| Add a module | `Modules/<Name>/` | Add the header and module `CMakeLists.txt`, then add the registry entry in `modules.yaml` |
+| Understand build inclusion | `Modules/CMakeLists.txt` | Includes every child directory containing `CMakeLists.txt` |
+| Inspect a module API or YAML contract | `Modules/<Name>/<Name>.hpp` and `README.md` | Header and manifest are authoritative for constructor parameters and topics |
+| Inspect protocol layouts | `NavLinkProtocol`, `SentryProtocol`, `DualBoard`, `NavHostLink` | Keep packed frame definitions and consumers compatible |
+| Inspect motor abstraction | `Motor/Motor.hpp`, `RMMotor`, `DMMotor` | Application code should depend on `Motor*` where possible |
+| Inspect debug commands | `DebugCore/DebugCore.hpp` and module debug includes | Follow existing `once`/`monitor` conventions |
 
-## CONVENTIONS
+## MODULE CONTRACT
 
-- Each module is a **standalone git repo** cloned into `Modules/`; has its own `.git/`
-- Header-only preferred (`.hpp`); some have `*Debug.inl` for debug terminal commands
-- Module pattern: class inheriting from LibXR `ApplicationBase` or similar, with `MANIFEST` metadata
-- `CMakeLists.txt` per module registers sources with the build system
-- YAML constructor args map 1:1 to C++ constructor parameters
-- `@&id` in YAML = pointer to previously constructed module instance
-- `@id` = reference; `@nullptr` = null pointer
+- Keep changes inside the module's own directory. Treat its nested `.git` checkout as independently owned code; coordinate upstream changes through that repository and update the parent registry/reference afterward.
+- Preserve the xrobot manifest at the top of module headers. Constructor argument names and types must stay aligned with YAML `constructor_args`.
+- `@&name` passes a pointer to an earlier instance, `@name` passes a reference, and `@nullptr` passes null. Construct dependencies before consumers.
+- Prefer the shared `Motor` interface in motion modules; concrete CAN/protocol details belong in `RMMotor` or `DMMotor`.
+- Keep topic names, packed protocol structs, timestamps, and timeout/fail-safe behavior compatible with peer modules. Update the module README and YAML examples when a public contract changes.
+- Header-only implementation is the normal pattern. Add `.cpp` files only when the module's existing build pattern requires them.
 
-## ANTI-PATTERNS
+## WORKFLOW
 
-- **DO NOT** modify modules without understanding they may be shared across repos
-- **DO NOT** break the YAML-to-constructor-args contract (parameter names must match)
-- **DO NOT** add files outside the module's own directory (keep modules self-contained)
-- `clang-format` scope is **only** `Modules/` — this is the formatting boundary
-- Upstream changes: push to the module's own repo, then update `modules.yaml` branch reference
+1. Inspect the target module's header, manifest, README, tests, and nested git status before editing.
+2. Make the smallest self-contained change and update module tests or examples when behavior changes.
+3. Run the repository's pinned clang-format for `Modules/`; do not hand-reorder includes afterward.
+4. Build the affected robot configuration with the documented `tools/build*.ps1` flow. The build uses `-Werror`, so warnings are failures.
+5. Check that registry entry, directory name, manifest name, and YAML `entry_header` agree. Keep generated-file changes separate from functional changes.
 
-## MODULE SOURCES
+## GUARDRAILS
 
-```yaml
-# modules.yaml — two registries
-sources:
-  - xrobot-org (official): BlinkLED, MadgwickAHRS, BuzzerAlarm, SharedTopic*
-  - qdu-future (team): BMI088, CMD, DR16, RMMotor, DMMotor, Chassis, Gimbal, Launcher, etc.
+- Do not edit `Drivers/`, `Middlewares/`, or generated CubeMX files as part of a module change.
+- Do not silently change a constructor parameter, topic schema, frame layout, or module name: existing robot YAML files are consumers.
+- Do not duplicate a protocol or motor abstraction already owned by another module.
+- Verify that a registry entry has a checked-out directory and `CMakeLists.txt` before using it.
+- `clang-format` scope is `Modules/` only. Never commit build artifacts.
+
+## REGISTRY COMMANDS
+
+```bash
+# Fetch/update modules from the configured index
+xrobot_init_mod --config Modules/sources.yaml --dir ./Modules
+
+# Generate xrobot wiring after changing YAML/module metadata
+xrobot_gen_main
+
+# Inspect the effective module list
+sed -n '1,200p' Modules/modules.yaml
 ```
