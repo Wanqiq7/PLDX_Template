@@ -13,7 +13,7 @@ Use the directory and module manifest as the source of truth. The current worksp
 | Hardware and state estimation | `BMI088`, `IST8310`, `MadgwickAHRS`, `Motor`, `RMMotor`, `DMMotor`, `SuperPower` |
 | Robot motion | `Chassis` (`Omni`, `Mecanum`, `Helm`), `Gimbal` (`YawSmc`, `YawLqrEso`), `MiniGimbal`, `InfantryLauncher`, `HeroLauncher`, `PowerControl` |
 | Operator and control flow | `CMD`, `DR16`, `VT13`, `HostData`, `EventBinder`, `DebugCore` |
-| Board and external links | `DualBoard`, `SentryProtocol`, `NavLinkProtocol`, `NavHostLink`, `SharedTopic`, `SharedTopicClient`, `CameraSync` |
+| Board and external links | `DualBoard`, `SentryProtocol`, `NavHostData`, `SharedTopic`, `SharedTopicClient`, `CameraSync` |
 | Robot services | `Referee`, `BlinkLED`, `BuzzerAlarm` |
 
 `Modules/modules.yaml` is the xrobot registry and may contain entries not present in the checkout. It currently lists `pldx/Dart`, while `Modules/Dart/` is absent; resolve that mismatch before depending on Dart. `Modules/sources.yaml` points at the PLDX module index (`GUET-PLDX/pldx-modules`).
@@ -26,7 +26,7 @@ Use the directory and module manifest as the source of truth. The current worksp
 | Add a module | `Modules/<Name>/` | Add the header and module `CMakeLists.txt`, then add the registry entry in `modules.yaml` |
 | Understand build inclusion | `Modules/CMakeLists.txt` | Includes every child directory containing `CMakeLists.txt` |
 | Inspect a module API or YAML contract | `Modules/<Name>/<Name>.hpp` and `README.md` | Header and manifest are authoritative for constructor parameters and topics |
-| Inspect protocol layouts | `NavLinkProtocol`, `SentryProtocol`, `DualBoard`, `NavHostLink` | Keep packed frame definitions and consumers compatible |
+| Inspect protocol layouts | `NavHostData`, `SentryProtocol`, `DualBoard` | Keep packed frame definitions and consumers compatible |
 | Inspect motor abstraction | `Motor/Motor.hpp`, `RMMotor`, `DMMotor` | Application code should depend on `Motor*` where possible |
 | Inspect debug commands | `DebugCore/DebugCore.hpp` and module debug includes | Follow existing `once`/`monitor` conventions |
 

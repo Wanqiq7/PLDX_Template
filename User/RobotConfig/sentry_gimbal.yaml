@@ -363,8 +363,8 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: launcher
         target_event: InfantryLauncher::LauncherEvent::SET_FRICMODE_READY
-- id: nav_host_link # 导航主机串口数据桥接模块
-  name: NavHostLink # 模块类型
+- id: nav_host_data # 导航主机串口数据桥接模块
+  name: NavHostData # 模块类型
   constructor_args:
     cmd: '@cmd' # 导航与视觉命令统一写入 CMD
     uart_name: usb_otg_hs_navigation_cdc # 与导航主机连接的 USB CDC

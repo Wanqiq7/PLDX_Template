@@ -20,8 +20,7 @@ modules:
 - pldx/SentryProtocol
 - pldx/InfantryLauncher
 - pldx/HostData
-- pldx/NavLinkProtocol
-- pldx/NavHostLink
+- pldx/NavHostData
 - pldx/SharedTopic
 - pldx/SharedTopicClient
 - pldx/DualBoard
