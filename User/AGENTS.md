@@ -24,7 +24,7 @@ User/
 |------|----------|-------|
 | Map new STM32 peripheral | `app_main.cpp` | Add `STM32*` wrapper + `LibXR::Entry` in `HardwareContainer` |
 | Create new robot config | `RobotConfig/<name>.yaml` | Define modules, PID params, motor assignments |
-| Change default config | `xrobot.yaml` | Used when no `-c` flag passed to buildchassis.ps1 / buildgimbal.ps1 |
+| Change default config | `xrobot.yaml` | Used when no `-c` flag passed to `tools/Windows/buildchassis.ps1` / `tools/Linux/buildchassis.sh` etc. |
 | Modify terminal/debug | `app_main.cpp` | `STDIO::read_`/`write_` + Terminal setup |
 | Flash storage layout | `flash_map.hpp` | Auto-generated, matches `DevC.ioc` MCU |
 

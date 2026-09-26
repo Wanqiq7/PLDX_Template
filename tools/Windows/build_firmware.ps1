@@ -6,10 +6,10 @@ $PSNativeCommandUseErrorActionPreference = $false
 $global:LASTEXITCODE = 0
 
 if (-not $script:UsageName) {
-  throw '请通过 tools/buildchassis.ps1 或 tools/buildgimbal.ps1 调用。'
+  throw '请通过 tools/Windows/buildchassis.ps1 或 tools/Windows/buildgimbal.ps1 调用。'
 }
 
-$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $RepoRoot
 
 function Show-Usage {
@@ -580,7 +580,7 @@ if (-not (Test-CommandExists 'starm-clang') -and -not (Test-CommandExists 'starm
 
 if (-not $SkipFormat) {
   Write-Host '[1/3] Running clang-format...'
-  & (Join-Path $RepoRoot 'tools/format_code.ps1')
+  & (Join-Path $RepoRoot 'tools/Windows/format_code.ps1')
   if ($global:LASTEXITCODE -ne 0) {
     throw "clang-format 失败 (exit $global:LASTEXITCODE)"
   }

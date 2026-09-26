@@ -19,7 +19,7 @@ bsp-dev-c/
 ├── Modules/        # Robot modules: Chassis, Gimbal, Motor, etc. (see Modules/AGENTS.md)
 ├── User/           # Application layer: hardware mapping + robot configs (see User/AGENTS.md)
 ├── cmake/          # Toolchain (starm-clang, gcc-arm) + CubeMX CMake integration
-├── tools/          # buildchassis.ps1, buildgimbal.ps1, format_code.ps1
+├── tools/          # Windows/ (build*.ps1, format_code.ps1), Linux/ (build*.sh, format_code.sh)
 ├── DevC.ioc        # CubeMX project (STM32F407IGHx)
 └── STM32F407XX_FLASH.ld  # Linker script
 ```
@@ -52,7 +52,7 @@ bsp-dev-c/
 ### Formatting
 
 - `.clang-format`: Google style, `IncludeBlocks: Regroup`
-- **clang-format 21.1.8** required (enforced by `tools/format_code.ps1`)
+- **clang-format 21.1.8** required (enforced by `tools/Windows/format_code.ps1` / `tools/Linux/format_code.sh`)
 - Formatting scope: `Modules/` only (not Core/, Drivers/, Middlewares/)
 - Install: `python -m venv .venv-clang-format && .venv-clang-format\Scripts\pip install "clang-format==21.1.8"`
 
@@ -87,22 +87,27 @@ git submodule update --init --recursive
 pip install libxr xrobot
 
 # Full pipeline (format + generate + build)
-pwsh tools/buildgimbal.ps1
-pwsh tools/buildchassis.ps1
+pwsh tools/Windows/buildgimbal.ps1
+pwsh tools/Windows/buildchassis.ps1
+# Linux equivalents
+bash tools/Linux/buildgimbal.sh
+bash tools/Linux/buildchassis.sh
 
 # Compile-only (skip formatting, faster)
-pwsh tools/buildgimbal.ps1 --skip-format
-pwsh tools/buildchassis.ps1 --skip-format
+pwsh tools/Windows/buildgimbal.ps1 --skip-format
+pwsh tools/Windows/buildchassis.ps1 --skip-format
+bash tools/Linux/buildgimbal.sh --skip-format
+bash tools/Linux/buildchassis.sh --skip-format
 
 # Override config / build directory
-pwsh tools/buildgimbal.ps1 -c User/RobotConfig/sentry_gimbal.yaml -b build/sentry_gimbal
-pwsh tools/buildchassis.ps1 -c User/RobotConfig/sentry_chassis.yaml -b build/sentry_chassis
+pwsh tools/Windows/buildgimbal.ps1 -c User/RobotConfig/sentry_gimbal.yaml -b build/sentry_gimbal
+pwsh tools/Windows/buildchassis.ps1 -c User/RobotConfig/sentry_chassis.yaml -b build/sentry_chassis
 
 # Format check (CI mode)
-pwsh tools/format_code.ps1 --check
+pwsh tools/Windows/format_code.ps1 --check   # or: bash tools/Linux/format_code.sh --check
 
 # Format apply
-pwsh tools/format_code.ps1
+pwsh tools/Windows/format_code.ps1
 
 # Generate xrobot code only
 xr_cubemx_cfg -d ./ --xrobot && xrobot_setup

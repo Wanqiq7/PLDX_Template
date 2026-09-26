@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $global:LASTEXITCODE = 0
 
-$script:UsageName = 'tools/buildgimbal.ps1'
+$script:UsageName = 'tools/Windows/buildgimbal.ps1'
 $script:DefaultConfigPrimary = 'User/RobotConfig/sentry_gimbal.yaml'
 $script:DefaultConfigFallback = 'User/RobotConfig/sentry_gimbal.yaml'
 $script:DefaultBuildDir = 'build/sentry_gimbal'
