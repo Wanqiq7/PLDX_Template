@@ -247,11 +247,6 @@ device_aliases:
     aliases:
     - usb_otg_hs_navigation_cdc
     - usb_navigation_cdc_hs
-  usb_otg_hs_vision_cdc:
-    type: UART
-    aliases:
-    - usb_otg_hs_vision_cdc
-    - usb_vision_cdc
   CAMERA:
     type: GPIO
     aliases:

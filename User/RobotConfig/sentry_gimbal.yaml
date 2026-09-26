@@ -33,7 +33,7 @@ modules:
     gyro_topic_name: gimbal_gyro # 发布云台角速度的主题名
     accl_topic_name: gimbal_accl # 发布云台加速度的主题名
     target_temperature: 45 # IMU 恒温目标，单位摄氏度
-    task_stack_depth: 1536 # IMU 任务栈深度，单位字节
+    task_stack_depth: 3072 # IMU 任务栈深度，单位字节
 - id: ahrs # Madgwick 姿态解算模块
   name: MadgwickAHRS # 模块类型
   constructor_args:
@@ -89,7 +89,7 @@ modules:
   name: Gimbal # 模块类型
   constructor_args:
     cmd: '@cmd' # 云台控制指令来源
-    task_stack_depth: 1536 # 云台控制任务栈深度，单位字节
+    task_stack_depth: 3072 # 云台控制任务栈深度，单位字节
     # PID 通用项：k 为总缩放；p/i/d 为增益；i_limit/out_limit 为限幅；cycle=true 时误差按角度周期回绕。
     pid_yaw_angle: # yaw 角度外环
       k: 1.0
@@ -125,26 +125,26 @@ modules:
       cycle: false
     motor_pitch: '@&motor_pit' # pitch 轴电机引用
     motor_yaw: '@&motor_yaw' # yaw 轴电机引用
-    pit_max_angle: 1.8 # pitch 机械上限角，单位 rad
-    pit_min_angle: 0.5 # pitch 机械下限角，单位 rad
-    pit_lc: 0.6 # pitch 重力补偿力臂/系数，需按机构标定
-    pit_theta: -0.1 # pitch 重力补偿相位偏置，单位 rad
-    yaw_k: 0.0 # yaw 重力/耦合补偿系数；0 表示未启用
-    j_pit: 0.014 # pitch 轴等效转动惯量，单位 kg*m^2
-    j_yaw: 0.03 # yaw 轴等效转动惯量，单位 kg*m^2
-    pit_zero: 0.8 # pitch 零位偏置，单位 rad
-    yaw_zero: 4.78755426 # yaw 零位偏置，单位 rad
-    patrol_pitch_amplitude_rad: 0.455 # 巡逻扫描的 pitch 振幅，单位 rad
-    patrol_pitch_angular_rate_rad_s: 10.0 # 巡逻扫描的 pitch 角速度，单位 rad/s
-    patrol_yaw_rate_rad_s: 1.0 # 巡逻扫描的 yaw 角速度，单位 rad/s
-    reverse_flag: true # 云台坐标/安装方向反向标志，须与机械安装一致
-    thread_priority: LibXR::Thread::Priority::HIGH # 云台控制任务优先级
-    rotor_ff_enabled: false # 是否启用小陀螺状态下的前馈补偿
-    yaw_manual_controller: YawManualController::SMC # 手动 Yaw：PID 或 SMC
-    yaw_ai_controller: YawAiController::SMC # 自瞄 Yaw：SMC 或 LQR_ESO
+    GimbalParam:
+      pit_max_angle: 1.8 # pitch 机械上限角，单位 rad
+      pit_min_angle: 0.5 # pitch 机械下限角，单位 rad
+      pit_lc: 0.6 # pitch 重力补偿力臂/系数，需按机构标定
+      pit_theta: -0.1 # pitch 重力补偿相位偏置，单位 rad
+      yaw_k: 0.0 # yaw 阻尼/耦合补偿系数；0 表示未启用
+      j_pit: 0.014 # pitch 轴等效转动惯量，单位 kg*m^2
+      j_yaw: 0.03 # yaw 轴等效转动惯量，单位 kg*m^2
+      pit_zero: 0.8 # pitch 零位偏置，单位 rad
+      yaw_zero: 4.78755426 # yaw 零位偏置，单位 rad
+      patrol_pitch_amplitude_rad: 0.455 # 巡逻扫描的 pitch 振幅，单位 rad
+      patrol_pitch_angular_rate_rad_s: 10.0 # 巡逻扫描的 pitch 角速度，单位 rad/s
+      patrol_yaw_rate_rad_s: 1.0 # 巡逻扫描的 yaw 角速度，单位 rad/s
+      reverse_flag: true # 云台坐标/安装方向反向标志，须与机械安装一致
+      thread_priority: LibXR::Thread::Priority::HIGH # 云台控制任务优先级
+      rotor_ff_enabled: false # 是否启用小陀螺状态下的前馈补偿
+      yaw_manual_controller: YawManualController::SMC # 手动 Yaw：PID 或 SMC
+      yaw_ai_controller: YawAiController::SMC # 自瞄 Yaw：SMC 或 LQR_ESO
     # yaw LQR/ESO 力矩控制参数；即使当前未选用，保留参数便于切回。
     yaw_lqr_eso:
-      b_nms_rad: 0.0 # 被控对象力矩增益，单位 N*m/rad；0 表示使用默认/未标定值
       k_theta: 1.0 # LQR 角度误差反馈增益
       k_omega: 1.0 # LQR 角速度误差反馈增益
       k_i: 0.2 # LQI 角度误差积分增益
@@ -170,7 +170,6 @@ modules:
       torque_slew_enable: true # 启用力矩变化率限制
     # yaw 滑模力矩控制参数；c/K/epsilon 为上电初值，实车需重调。
     yaw_smc:
-      j_kg_m2: 0.041 # yaw 轴等效转动惯量，单位 kg*m^2
       c: 12.0 # 滑模面系数，单位 1/s
       k: 30.0 # 线性趋近项系数，单位 1/s
       epsilon: 0.5 # 切换项系数，单位 rad/s^2
@@ -276,11 +275,9 @@ modules:
       bullet_speed_tolerance: 1.5 # 弹速允许偏差，单位 m/s
       trig_gear_ratio: 36 # 拨弹盘传动减速比
       num_trig_tooth: 10 # 拨弹盘单圈对应的拨弹齿数
-    heat_control_enabled: true # 启用基于热量预算的射频限制
+    heat_control_enabled: false # 启用基于裁判剩余热量的分档弹频控制
     single_heat: 10.0 # 单发热量消耗
-    max_frequency: 15.0 # 最大发射频率，单位 Hz
-    burst_duration: 2.0 # 连发模式单次持续时间，单位 s
-    heat_margin: 10.0 # 预留热量安全边际
+    max_frequency: 15.0 # 最大发射频率（全速档射频），单位 Hz
     cmd: '@&cmd' # 发射控制指令来源
     referee: '@nullptr' # 裁判数据由底盘板经 DualBoard 同步，故本地置空
     thread_priority: LibXR::Thread::Priority::HIGH # 发射控制任务优先级
@@ -312,7 +309,7 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: cmd
         target_event: CMD::Mode::CMD_AUTO_CTRL
-    - bindings: # 左拨杆：经板间通信选择底盘松弛、跟随或小陀螺模式
+    - bindings: # 左拨杆：经板间通信选择底盘松弛、跟随或变速小陀螺模式
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_L_POS_TOP
         target_module: dual_board
@@ -324,7 +321,7 @@ modules:
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_L_POS_BOT
         target_module: dual_board
-        target_event: Omni::ChassisMode::ROTOR
+        target_event: Omni::ChassisMode::ROTOR_VARIABLE
     - bindings: # 右拨杆与 Q/E 键：选择云台和视觉模式
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_R_POS_TOP
@@ -346,7 +343,7 @@ modules:
         source_event: DR16::Key::KEY_E
         target_module: gimbal
         target_event: GimbalEvent::SET_VISION_BIG_BUFF
-    - bindings: # 拨杆：切换摩擦轮安全或准备状态
+    - bindings: # 拨杆：切换摩擦轮安全或准备状态；右拨杆中档连转拨弹盘
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_L_POS_TOP
         target_module: launcher
@@ -359,6 +356,10 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_R_POS_MID
         target_module: launcher
         target_event: InfantryLauncher::LauncherEvent::SET_FRICMODE_READY
+      - source_module: dr16
+        source_event: DR16::SwitchPos::DR16_SW_R_POS_MID
+        target_module: launcher
+        target_event: InfantryLauncher::LauncherEvent::SET_SHOTMODE_CONTINUE
       - source_module: dr16
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: launcher
@@ -384,26 +385,10 @@ modules:
   name: SharedTopicClient # 模块类型
   constructor_args:
     uart_name: usb_otg_hs_navigation_cdc # 发送端 USB CDC，与导航端配置保持一致
-    slot_count: 32 # 发送队列槽位数
+    slot_count: 64 # 发送队列槽位数
     topic_configs: # 发送给导航端的主题列表
     - team_info # 己方队伍成员位置与血量
     - game_info # 比赛状态与敌方基地血量
     - online_info # 本机在线裁判与位置状态
     - offline_info # 双板底盘 yaw 与离线状态
     - radar_info # 雷达摘要
-- id: vision_shared_topic # 从视觉上位机接收共享主题的服务端
-  name: SharedTopic # 模块类型
-  constructor_args:
-    uart_name: usb_otg_hs_vision_cdc # 视觉上位机 USB CDC 串口
-    buffer_size: 256 # 接收缓冲区大小，单位字节
-    topic_configs: # 允许视觉端写入本板的主题列表
-    - target_euler # 视觉解算的云台目标欧拉角
-    - fire_notify # 视觉开火通知
-- id: vision_shared_topic_client # 向视觉上位机发送共享主题的客户端
-  name: SharedTopicClient # 模块类型
-  constructor_args:
-    uart_name: usb_otg_hs_vision_cdc # 视觉上位机 USB CDC 串口
-    slot_count: 16 # 发送队列槽位数
-    topic_configs: # 发送给视觉端的主题列表
-    - ahrs_quaternion # 本机姿态四元数
-    - nav_gimbal_feedback # 导航/云台反馈数据

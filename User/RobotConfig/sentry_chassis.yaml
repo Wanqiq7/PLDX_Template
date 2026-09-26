@@ -143,6 +143,11 @@ modules:
       rotor_buffer_low_j: 35.0 # 小陀螺降速开始的底盘功率缓冲能量阈值，单位 J
       rotor_buffer_high_j: 70.0 # 小陀螺恢复全速的底盘功率缓冲能量阈值，单位 J
       rotor_scale_lpf_alpha: 0.2 # 小陀螺速度缩放低通滤波系数，范围 [0, 1]
+      spin_torque_amp_nm: 15.0 # 变速小陀螺 DRIVE 相底盘偏航扭矩幅值，单位 N·m
+      spin_omega_hi_rad_s: 14.0 # 变速小陀螺滞环上限，进入滑行相，单位 rad/s
+      spin_omega_lo_rad_s: 6.0 # 变速小陀螺滞环下限，恢复驱动相，单位 rad/s
+      spin_omega_max_rad_s: 16.0 # 变速小陀螺硬安全上限，超限强制滑行，单位 rad/s
+      spin_drive_timeout_s: 2.0 # 变速小陀螺单次驱动相最长时间，单位 s
     # PID 通用项：k 为总缩放系数；p/i/d 为三项增益；i_limit、out_limit 为 0 时通常表示不限制；cycle 表示误差按角度周期回绕。
     pid_follow_:
       k: 1.0 # 跟随环总缩放系数

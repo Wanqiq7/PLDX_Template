@@ -78,14 +78,6 @@ static uint8_t usart1_rx_buf[128];
 static uint8_t usart3_rx_buf[128];
 static uint8_t i2c1_buf[32];
 static uint8_t i2c3_buf[32];
-static uint8_t usb_otg_hs_ep0_in_buf[8];
-static uint8_t usb_otg_hs_ep0_out_buf[8];
-static uint8_t usb_otg_hs_ep1_in_buf[128];
-static uint8_t usb_otg_hs_ep1_out_buf[128];
-static uint8_t usb_otg_hs_ep2_in_buf[128];
-static uint8_t usb_otg_hs_ep2_out_buf[128];
-static uint8_t usb_otg_hs_ep3_in_buf[128];
-static uint8_t usb_otg_hs_ep4_in_buf[16];
 static uint8_t usb_otg_fs_ep0_in_buf[8];
 static uint8_t usb_otg_fs_ep0_out_buf[8];
 static uint8_t usb_otg_fs_ep1_in_buf[128];
@@ -156,62 +148,32 @@ extern "C" void app_main(void) {
 
   STM32CAN can2(&hcan2, 8);
 
-  static constexpr auto USB_OTG_HS_LANG_PACK = LibXR::USB::DescriptorStrings::MakeLanguagePack(LibXR::USB::DescriptorStrings::Language::EN_US, "QDU-Future", "MainCtrl", "QDU-Future-MainCtrl-89ABCDEF0123456701234567");
-  ApplicationCDCUart usb_otg_hs_navigation_cdc(
-      LibXR::USB::Endpoint::EPNumber::EP1,
-      LibXR::USB::Endpoint::EPNumber::EP1,
-      LibXR::USB::Endpoint::EPNumber::EP2,
-      256, 128, 8, "XRUSB Navigation Control", "XRUSB Navigation Data");
-  ApplicationCDCUart usb_otg_hs_vision_cdc(
-      LibXR::USB::Endpoint::EPNumber::EP2,
-      LibXR::USB::Endpoint::EPNumber::EP2,
-      LibXR::USB::Endpoint::EPNumber::EP4,
-      256, 128, 8, "XRUSB Vision Control", "XRUSB Vision Data");
-
-  STM32USBDeviceOtgHS usb_hs(
-      &hpcd_USB_OTG_HS,
-      256,
-      {usb_otg_hs_ep0_out_buf, usb_otg_hs_ep1_out_buf, usb_otg_hs_ep2_out_buf},
-      {{usb_otg_hs_ep0_in_buf, 8}, {usb_otg_hs_ep1_in_buf, 128},
-       {usb_otg_hs_ep2_in_buf, 128}, {usb_otg_hs_ep3_in_buf, 128},
-       {usb_otg_hs_ep4_in_buf, 16}},
-      USB::DeviceDescriptor::PacketSize0::SIZE_8,
-      0x16D0, 0x1492, 0xF407,
-      {&USB_OTG_HS_LANG_PACK},
-      {{&usb_otg_hs_navigation_cdc, &usb_otg_hs_vision_cdc}},
-      {reinterpret_cast<void *>(UID_BASE), 12}
-  );
-  usb_hs.Init(false);
-  usb_hs.Start(false);
-
   static constexpr auto USB_OTG_FS_LANG_PACK = LibXR::USB::DescriptorStrings::MakeLanguagePack(
       LibXR::USB::DescriptorStrings::Language::EN_US, "QDU-Future", "MainCtrl",
       "QDU-Future-MainCtrl-89ABCDEF0123456701234567");
-  ApplicationCDCUart usb_otg_fs_cdc(
+  ApplicationCDCUart usb_otg_fs_navigation_cdc(
       LibXR::USB::Endpoint::EPNumber::EP1,
       LibXR::USB::Endpoint::EPNumber::EP1,
       LibXR::USB::Endpoint::EPNumber::EP2,
-      256, 256, 15);
+      256, 256, 15, "XRUSB CDC Control", "XRUSB Navigation Data");
   STM32USBDeviceOtgFS usb_fs(
       &hpcd_USB_OTG_FS,
       256,
       {usb_otg_fs_ep0_out_buf, usb_otg_fs_ep1_out_buf},
-      {{usb_otg_fs_ep0_in_buf, 8}, {usb_otg_fs_ep1_in_buf, 128}, {usb_otg_fs_ep2_in_buf, 16}},
+      {{usb_otg_fs_ep0_in_buf, 8}, {usb_otg_fs_ep1_in_buf, 128},
+       {usb_otg_fs_ep2_in_buf, 16}},
       USB::DeviceDescriptor::PacketSize0::SIZE_8,
-       0x16D0, 0x1492, 0x0407,
+      0x16D0, 0x1492, 0x0407,
       {&USB_OTG_FS_LANG_PACK},
-      {{&usb_otg_fs_cdc}},
+      {{&usb_otg_fs_navigation_cdc}},
       {reinterpret_cast<void *>(UID_BASE), 12});
   usb_fs.Init(false);
   usb_fs.Start(false);
 
-  STDIO::read_ = usb_otg_fs_cdc.read_port_;
-  STDIO::write_ = usb_otg_fs_cdc.write_port_;
+  // 导航 CDC 的接收端口由导航协议模块独占，终端不读取该端口。
+  STDIO::read_ = nullptr;
+  STDIO::write_ = usb_otg_fs_navigation_cdc.write_port_;
   RamFS ramfs("XRobot");
-  Terminal<32, 32, 5, 5> terminal(ramfs);
-  LibXR::Thread term_thread;
-  term_thread.Create(&terminal, terminal.ThreadFun, "terminal", 2048,
-                     static_cast<LibXR::Thread::Priority>(3));
 
   LibXR::HardwareContainer peripherals{
     LibXR::Entry<LibXR::PowerManager>({power_manager, {"power_manager"}}),
@@ -247,12 +209,9 @@ extern "C" void app_main(void) {
     LibXR::Entry<LibXR::CAN>({can1, {"can1", "imu_can"}}),
     LibXR::Entry<LibXR::CAN>({can2, {"can2"}}),
     LibXR::Entry<LibXR::RamFS>({ramfs, {"ramfs"}}),
-    LibXR::Entry<LibXR::Terminal<32, 32, 5, 5>>({terminal, {"terminal"}}),
-     LibXR::Entry<LibXR::UART>({usb_otg_fs_cdc, {"usb_otg_fs_cdc", "usb_navigation_cdc", "usb_ai"}}),
-     LibXR::Entry<LibXR::UART>({usb_otg_hs_navigation_cdc,
-                                {"usb_otg_hs_navigation_cdc", "usb_navigation_cdc_hs"}}),
-     LibXR::Entry<LibXR::UART>({usb_otg_hs_vision_cdc,
-                                {"usb_otg_hs_vision_cdc", "usb_vision_cdc"}}),
+     LibXR::Entry<LibXR::UART>({usb_otg_fs_navigation_cdc,
+                                {"usb_otg_fs_navigation_cdc", "usb_otg_hs_navigation_cdc",
+                                 "usb_navigation_cdc", "usb_navigation_cdc_hs"}}),
     LibXR::Entry<LibXR::GPIO>({CAMERA, {"CAMERA"}}),
     LibXR::Entry<LibXR::GPIO>({IMU_INT, {"IMU_INT"}})
   };
