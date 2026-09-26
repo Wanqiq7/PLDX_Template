@@ -26,3 +26,7 @@ User/xrobot_main.hpp
 .Data/**
 # Module source directories are maintained separately and should not be tracked
 Modules/*
+
+# Tool working directories
+.marscode/
+.workbuddy/
