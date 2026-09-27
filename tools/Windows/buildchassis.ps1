@@ -9,9 +9,12 @@ $script:DefaultConfigFallback = 'User/RobotConfig/sentry_chassis.yaml'
 $script:DefaultBuildDir = 'build/sentry_chassis'
 
 try {
+  Push-Location $PSScriptRoot
   . "$PSScriptRoot\build_firmware.ps1" @args
 } catch {
   [Console]::Error.WriteLine($_.Exception.Message)
   exit 1
+} finally {
+  Pop-Location
 }
 exit $global:LASTEXITCODE

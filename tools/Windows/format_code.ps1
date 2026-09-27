@@ -4,13 +4,14 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $global:LASTEXITCODE = 0
 
-$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-Set-Location $RepoRoot
+# 禁止在本脚本内调用 Set-Location：它由 build_firmware.ps1 以 & 的方式在同一 runspace 内调用，
+# 切换工作目录会泄漏到调用者会话且不会恢复。所有路径一律基于 $RepoRoot 拼接。
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
 function Show-Usage {
   @'
 Usage:
-  tools/format_code.ps1 [--check]
+  tools/Windows/format_code.ps1 [--check]
 
 Description:
   Format C/C++ files under Modules/ using clang-format.
@@ -291,13 +292,14 @@ function Install-LocalClangFormatVenv {
 }
 
 function Get-SourceFiles {
+  $modulesDir = Join-Path $RepoRoot 'Modules'
   $files = [System.Collections.Generic.List[string]]::new()
-  if (-not (Test-Path -LiteralPath 'Modules' -PathType Container)) {
+  if (-not (Test-Path -LiteralPath $modulesDir -PathType Container)) {
     return [string[]]@()
   }
 
   $exts = @('.c', '.cc', '.cpp', '.cxx', '.h', '.hh', '.hpp', '.hxx')
-  Get-ChildItem -LiteralPath 'Modules' -Recurse -File |
+  Get-ChildItem -LiteralPath $modulesDir -Recurse -File |
     Where-Object { $exts -contains $_.Extension.ToLowerInvariant() } |
     ForEach-Object { [void]$files.Add($_.FullName) }
   return [string[]]$files.ToArray()
