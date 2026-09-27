@@ -132,7 +132,7 @@ modules:
       pit_theta: -0.1 # pitch 重力补偿相位偏置，单位 rad
       yaw_k: 0.0 # yaw 阻尼/耦合补偿系数；0 表示未启用
       j_pit: 0.014 # pitch 轴等效转动惯量，单位 kg*m^2
-      j_yaw: 0.03 # yaw 轴等效转动惯量，单位 kg*m^2
+      j_yaw: 0.04373488 # yaw 轴等效转动惯量，单位 kg*m^2
       pit_zero: 0.8 # pitch 零位偏置，单位 rad
       yaw_zero: 4.78755426 # yaw 零位偏置，单位 rad
       patrol_pitch_amplitude_rad: 0.455 # 巡逻扫描的 pitch 振幅，单位 rad
@@ -140,7 +140,7 @@ modules:
       patrol_yaw_rate_rad_s: 1.0 # 巡逻扫描的 yaw 角速度，单位 rad/s
       reverse_flag: true # 云台坐标/安装方向反向标志，须与机械安装一致
       thread_priority: LibXR::Thread::Priority::HIGH # 云台控制任务优先级
-      rotor_ff_enabled: false # 是否启用小陀螺状态下的前馈补偿
+      rotor_ff_enabled: true # 是否启用小陀螺状态下的前馈补偿
       yaw_manual_controller: YawManualController::SMC # 手动 Yaw：PID 或 SMC
       yaw_ai_controller: YawAiController::SMC # 自瞄 Yaw：SMC 或 LQR_ESO
     # yaw LQR/ESO 力矩控制参数；即使当前未选用，保留参数便于切回。
@@ -211,7 +211,7 @@ modules:
     param:
       model: RMMotor::Model::MOTOR_M2006 # 电机型号
       reverse: false # true 时反转控制与反馈方向
-      feedback_id: 517 # 电机 CAN 反馈 ID（0x205）
+      feedback_id: 515 # 电机 CAN 反馈 ID（0x203）
       can_bus_name: can1 # 电机所接 CAN 总线
 - id: motor_fric_0 # 左侧/前左摩擦轮 M3508 电机
   name: RMMotor # 大疆 CAN 电机模块类型
@@ -227,7 +227,7 @@ modules:
     param:
       model: RMMotor::Model::MOTOR_M3508 # 电机型号
       reverse: false # true 时反转控制与反馈方向
-      feedback_id: 515 # 电机 CAN 反馈 ID（0x203）
+      feedback_id: 512 # 电机 CAN 反馈 ID（0x203）
       can_bus_name: can2 # 电机所接 CAN 总线
 - id: launcher # 步兵发射机构控制模块
   name: InfantryLauncher # 模块类型
@@ -243,7 +243,7 @@ modules:
       i: 0.1
       d: 0.0
       i_limit: 0.0
-      out_limit: 25.0
+      out_limit: 100.0
       cycle: false
     pid_trig_speed: # 拨弹盘速度闭环
       k: 1.0
@@ -269,15 +269,15 @@ modules:
       i_limit: 0.0
       out_limit: 1.0
       cycle: false
-    launcher_param:
+    LauncherParam:
       fric1_setpoint_speed: 6000.0 # 摩擦轮 1 目标转速，单位 rpm
       target_bullet_speed: 24.0 # 目标弹速，单位 m/s
       bullet_speed_tolerance: 1.5 # 弹速允许偏差，单位 m/s
       trig_gear_ratio: 36 # 拨弹盘传动减速比
-      num_trig_tooth: 10 # 拨弹盘单圈对应的拨弹齿数
-    heat_control_enabled: false # 启用基于裁判剩余热量的分档弹频控制
-    single_heat: 10.0 # 单发热量消耗
-    max_frequency: 15.0 # 最大发射频率（全速档射频），单位 Hz
+      num_trig_tooth: 8 # 拨弹盘单圈对应的拨弹齿数
+      heat_control_enabled: false # 启用基于裁判剩余热量的分档弹频控制
+      single_heat: 10.0 # 单发热量消耗
+      max_frequency: 30.0 # 最大发射频率（全速档射频），单位 Hz
     cmd: '@&cmd' # 发射控制指令来源
     referee: '@nullptr' # 裁判数据由底盘板经 DualBoard 同步，故本地置空
     thread_priority: LibXR::Thread::Priority::HIGH # 发射控制任务优先级
