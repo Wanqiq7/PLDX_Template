@@ -184,6 +184,26 @@ modules:
       torque_slew_rate_nm_s: 1000.0 # 力矩变化率限幅，单位 N*m/s
       ftsmc_enable: true # 启用快速终端滑模；关闭则全程线性滑模
       torque_slew_enable: true # 启用力矩变化率限制
+    # 系统辨识（一次性标定工具）：enabled=true 时上电自动进入辨识流程，
+    # 完成后锁死 RELAX，结果经 Ozone 读取后须改回 false 重启恢复正常使用。
+    system_identify:
+      enabled: false # 总开关：true 上电进入辨识（等待 RC 上线后倒计时启动）
+      axis_select: IdentifyAxis::BOTH # 辨识轴：YAW_ONLY / PITCH_ONLY / BOTH（yaw 先）
+      arming_delay_s: 3.0 # RC 上线后启动倒计时，单位 s
+      step_torque_yaw_nm: 0.5 # yaw 开环力矩阶跃幅值，单位 N*m（GM6020 上限 2.223）
+      step_torque_pit_nm: 0.2 # pitch 开环力矩阶跃幅值，单位 N*m（首测建议 0.15 起步）
+      step_half_period_s: 0.5 # 阶跃半周期（+tau/-tau 各持续时间），单位 s
+      step_cycles: 10 # 每轴双向换向周期数
+      settle_time_s: 1.0 # 激励后静置收敛时间，单位 s
+      lpf_cutoff_hz: 50.0 # tau/omega/alpha 统一一阶低通截止频率，单位 Hz
+      alpha_gate_rad_s2: 1.0 # RLS 更新门控：|alpha| 低于此值冻结，单位 rad/s^2
+      rls_delta: 1000.0 # RLS 协方差初值 P0 = delta*I
+      rls_lambda: 1.0 # RLS 遗忘因子（一次性标定取 1.0）
+      coulomb_tanh_scale: 0.1 # 库仑摩擦 tanh 平滑速度尺度，单位 rad/s
+      omega_abort_yaw: 8.0 # yaw 超速中止阈值，单位 rad/s
+      omega_abort_pit: 4.0 # pitch 超速中止阈值，单位 rad/s
+      pit_angle_margin_rad: 0.1 # pitch 机械限位内缩安全边距，单位 rad
+      axis_timeout_s: 30.0 # 单轴激励总时长超时中止，单位 s
 - id: dual_board # 云台与底盘控制板 CAN 通信模块
   name: DualBoard # 模块类型
   template_args:
