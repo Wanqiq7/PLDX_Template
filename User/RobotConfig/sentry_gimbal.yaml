@@ -132,7 +132,7 @@ modules:
       pit_theta: -0.1 # pitch 重力补偿相位偏置，单位 rad
       yaw_k: 0.0 # yaw 阻尼/耦合补偿系数；0 表示未启用
       j_pit: 0.014 # pitch 轴等效转动惯量，单位 kg*m^2
-      j_yaw: 0.04373488 # yaw 轴等效转动惯量，单位 kg*m^2
+      j_yaw: 0.0395300984 # yaw 轴等效转动惯量，单位 kg*m^2
       pit_zero: 0.8 # pitch 零位偏置，单位 rad
       yaw_zero: 4.78755426 # yaw 零位偏置，单位 rad
       patrol_pitch_amplitude_rad: 0.455 # 巡逻扫描的 pitch 振幅，单位 rad
@@ -145,13 +145,13 @@ modules:
       yaw_ai_controller: YawAiController::SMC # 自瞄 Yaw：SMC 或 LQR_ESO
     # yaw LQR/ESO 力矩控制参数；即使当前未选用，保留参数便于切回。
     yaw_lqr_eso:
-      k_theta: 1.0 # LQR 角度误差反馈增益
-      k_omega: 1.0 # LQR 角速度误差反馈增益
-      k_i: 0.2 # LQI 角度误差积分增益
+      k_theta: 5.000000 # LQR 角度误差反馈增益
+      k_omega: 0.479093 # LQR 角速度误差反馈增益
+      k_i: 0.750000 # LQI 角度误差积分增益
       theta_integral_limit_rad_s: 0.5 # 角度积分状态限幅，单位 rad*s
       tau_coulomb_nm: 0.05 # 库仑摩擦补偿力矩，单位 N*m
       coulomb_smooth_rad_s: 0.2 # 库仑摩擦符号函数平滑速度，单位 rad/s
-      eso_bandwidth_rad_s: 30.0 # 扩张状态观测器带宽，单位 rad/s
+      eso_bandwidth_rad_s: 44.986 # 扩张状态观测器带宽，单位 rad/s
       eso_comp_gain: 1.0 # ESO 扰动补偿增益
       eso_comp_limit_nm: 0.3 # ESO 扰动补偿力矩限幅，单位 N*m
       eso_omega_gate_rad_s: 5.0 # 高于此角速度时禁止/抑制 ESO 补偿，单位 rad/s
@@ -170,25 +170,28 @@ modules:
       torque_slew_enable: true # 启用力矩变化率限制
     # yaw 滑模力矩控制参数；c/K/epsilon 为上电初值，实车需重调。
     yaw_smc:
-      c: 12.0 # 滑模面系数，单位 1/s
-      k: 30.0 # 线性趋近项系数，单位 1/s
-      epsilon: 0.5 # 切换项系数，单位 rad/s^2
+      c: 16.572139 # 滑模面系数，单位 1/s
+      k: 7.632443 # 线性趋近项系数，单位 1/s
+      epsilon: 6.575385 # 切换项系数，单位 rad/s^2
       q: 21.0 # 终端滑模指数分子
       p: 27.0 # 终端滑模指数分母，须大于 q
       error_deadband_rad: 0.0 # 角度误差死区，单位 rad
       ftsmc_switch_rad: 0.25 # 小于该误差时切回线性滑模，单位 rad
-      sat_boundary: 1.15 # sat(s/boundary) 边界层厚度
+      sat_boundary: 0.058067 # sat(s/boundary) 边界层厚度
       torque_soft_limit_nm: 2.0 # 力矩软限幅，单位 N*m
-      torque_min_nm: -2.5 # 力矩硬限幅下限，单位 N*m
-      torque_max_nm: 2.5 # 力矩硬限幅上限，单位 N*m
+      torque_min_nm: -2.2230 # 力矩硬限幅下限，单位 N*m
+      torque_max_nm: 2.2230 # 力矩硬限幅上限，单位 N*m
       torque_slew_rate_nm_s: 1000.0 # 力矩变化率限幅，单位 N*m/s
       ftsmc_enable: true # 启用快速终端滑模；关闭则全程线性滑模
       torque_slew_enable: true # 启用力矩变化率限制
     # 系统辨识（一次性标定工具）：enabled=true 时上电自动进入辨识流程，
     # 完成后锁死 RELAX，结果经 Ozone 读取后须改回 false 重启恢复正常使用。
+    # 操作规程：右拨杆置上段（RELAX 档）、先开遥控器再上云台板电——
+    # 拨杆在中/下段上电会导致辨识不进入；ARMING 倒计时期间拨到中/下段
+    # 或激励期间任何拨杆动作都会中止辨识（上段 RELAX 事件除外）。
     system_identify:
       enabled: false # 总开关：true 上电进入辨识（等待 RC 上线后倒计时启动）
-      axis_select: IdentifyAxis::BOTH # 辨识轴：YAW_ONLY / PITCH_ONLY / BOTH（yaw 先）
+      axis_select: IdentifyAxis::PITCH_ONLY # 辨识轴：YAW_ONLY / PITCH_ONLY / BOTH（yaw 先）
       arming_delay_s: 3.0 # RC 上线后启动倒计时，单位 s
       step_torque_yaw_nm: 0.5 # yaw 开环力矩阶跃幅值，单位 N*m（GM6020 上限 2.223）
       step_torque_pit_nm: 0.2 # pitch 开环力矩阶跃幅值，单位 N*m（首测建议 0.15 起步）
