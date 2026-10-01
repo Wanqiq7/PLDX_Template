@@ -1,4 +1,4 @@
-terminal_source: usb_otg_fs_cdc
+terminal_source: ''
 software_timer:
   priority: 2
   stack_depth: 2048
@@ -60,7 +60,7 @@ USB:
     product: MainCtrl
     serial: QDU-Future-MainCtrl-89ABCDEF0123456701234567
   usb_otg_hs:
-    enable: true
+    enable: false
     ep0_packet_size: 8
     tx_buffer_size: 128
     rx_buffer_size: 128
@@ -240,13 +240,11 @@ device_aliases:
     type: UART
     aliases:
     - usb_otg_fs_cdc
-    - usb_navigation_cdc
-    - usb_ai
-  usb_otg_hs_navigation_cdc:
-    type: UART
-    aliases:
+    - usb_otg_fs_navigation_cdc
     - usb_otg_hs_navigation_cdc
+    - usb_navigation_cdc
     - usb_navigation_cdc_hs
+    - usb_ai
   CAMERA:
     type: GPIO
     aliases:

@@ -23,6 +23,7 @@
 
 using namespace LibXR;
 
+/* User Code Begin 1 */
 /**
  * @brief 延迟 USB CDC 端点绑定完成前的 UART 配置请求。
  *
@@ -44,8 +45,6 @@ class ApplicationCDCUart final : public LibXR::USB::CDCUart
     return LibXR::USB::CDCUart::SetConfig(cfg);
   }
 };
-
-/* User Code Begin 1 */
 /* User Code End 1 */
 // NOLINTBEGIN
 // clang-format off
@@ -170,9 +169,10 @@ extern "C" void app_main(void) {
   usb_fs.Init(false);
   usb_fs.Start(false);
 
-  // 导航 CDC 的接收端口由导航协议模块独占，终端不读取该端口。
+  // 不启用终端：导航 CDC 由导航协议模块独占，日志文本不得混入协议数据流。
   STDIO::read_ = nullptr;
-  STDIO::write_ = usb_otg_fs_navigation_cdc.write_port_;
+  STDIO::write_ = nullptr;
+  // 模块调试命令文件注册所需，不挂载终端。
   RamFS ramfs("XRobot");
 
   LibXR::HardwareContainer peripherals{
