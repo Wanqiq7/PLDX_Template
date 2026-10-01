@@ -404,6 +404,8 @@ modules:
     topic_configs: # 允许从导航端写入本板的主题列表
     - nav_data # 导航底盘速度/姿态目标
     - behavior_data # 导航行为请求
+    - target_euler # 视觉云台目标
+    - fire_notify # 视觉开火通知
 - id: nav_tx_shared_topic_client # 向导航串口发送共享主题的客户端
   name: SharedTopicClient # 模块类型
   constructor_args:
