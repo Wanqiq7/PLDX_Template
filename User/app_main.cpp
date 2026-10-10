@@ -150,11 +150,11 @@ extern "C" void app_main(void) {
   static constexpr auto USB_OTG_FS_LANG_PACK = LibXR::USB::DescriptorStrings::MakeLanguagePack(
       LibXR::USB::DescriptorStrings::Language::EN_US, "QDU-Future", "MainCtrl",
       "QDU-Future-MainCtrl-89ABCDEF0123456701234567");
-  ApplicationCDCUart usb_otg_fs_navigation_cdc(
+  ApplicationCDCUart usb_otg_fs_talos_cdc(
       LibXR::USB::Endpoint::EPNumber::EP1,
       LibXR::USB::Endpoint::EPNumber::EP1,
       LibXR::USB::Endpoint::EPNumber::EP2,
-      256, 256, 15, "XRUSB CDC Control", "XRUSB Navigation Data");
+      256, 256, 15, "XRUSB CDC Control", "Talos Visual Data");
   STM32USBDeviceOtgFS usb_fs(
       &hpcd_USB_OTG_FS,
       256,
@@ -164,12 +164,12 @@ extern "C" void app_main(void) {
       USB::DeviceDescriptor::PacketSize0::SIZE_8,
       0x16D0, 0x1492, 0x0407,
       {&USB_OTG_FS_LANG_PACK},
-      {{&usb_otg_fs_navigation_cdc}},
+      {{&usb_otg_fs_talos_cdc}},
       {reinterpret_cast<void *>(UID_BASE), 12});
   usb_fs.Init(false);
   usb_fs.Start(false);
 
-  // 不启用终端：导航 CDC 由导航协议模块独占，日志文本不得混入协议数据流。
+  // Talos CDC 由视觉协议模块独占，日志文本不得混入协议数据流。
   STDIO::read_ = nullptr;
   STDIO::write_ = nullptr;
   // 模块调试命令文件注册所需，不挂载终端。
@@ -209,8 +209,8 @@ extern "C" void app_main(void) {
     LibXR::Entry<LibXR::CAN>({can1, {"can1", "imu_can"}}),
     LibXR::Entry<LibXR::CAN>({can2, {"can2"}}),
     LibXR::Entry<LibXR::RamFS>({ramfs, {"ramfs"}}),
-     LibXR::Entry<LibXR::UART>({usb_otg_fs_navigation_cdc,
-                                {"usb_otg_fs_navigation_cdc", "usb_otg_hs_navigation_cdc",
+     LibXR::Entry<LibXR::UART>({usb_otg_fs_talos_cdc,
+                                {"usb_talos_cdc", "usb_otg_fs_talos_cdc", "usb_otg_fs_navigation_cdc", "usb_otg_hs_navigation_cdc",
                                  "usb_navigation_cdc", "usb_navigation_cdc_hs"}}),
     LibXR::Entry<LibXR::GPIO>({CAMERA, {"CAMERA"}}),
     LibXR::Entry<LibXR::GPIO>({IMU_INT, {"IMU_INT"}})

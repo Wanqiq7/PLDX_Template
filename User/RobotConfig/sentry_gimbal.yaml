@@ -387,37 +387,15 @@ modules:
         source_event: DR16::SwitchPos::DR16_SW_R_POS_BOT
         target_module: launcher
         target_event: InfantryLauncher::LauncherEvent::SET_FRICMODE_READY
-- id: nav_host_data # 导航主机串口数据桥接模块
-  name: HostDataLink # 模块类型
-  entry_header: HostDataLink.hpp
+- id: talos_link # Talos 视觉 USB 通信模块
+  name: TalosLink
+  entry_header: TalosLink.hpp
   constructor_args:
-    cmd: '@cmd' # 导航与视觉命令统一写入 CMD
-    uart_name: usb_otg_hs_navigation_cdc # 与导航主机连接的 USB CDC
-    referee_topic_name: sentry_ref # 转发给导航端的裁判状态主题
-    pitch_topic_name: pitchmotor_angle # 转发给导航端的 pitch 电机角度主题
-    yaw_topic_name: yawmotor_angle # 转发给导航端的 yaw 电机角度主题
-    quaternion_topic_name: ahrs_quaternion # 转发给导航端的姿态四元数主题
-- id: nav_rx_shared_topic # 从导航串口接收共享主题的服务端
-  name: SharedTopic # 模块类型
-  constructor_args:
-    uart_name: usb_otg_hs_navigation_cdc # 接收端 USB CDC，与导航端配置保持一致
-    buffer_size: 256 # 接收缓冲区大小，单位字节
-    topic_configs: # 允许从导航端写入本板的主题列表
-    - nav_data # 导航底盘速度/姿态目标
-    - behavior_data # 导航行为请求
-    - target_euler # 视觉云台目标
-    - fire_notify # 视觉开火通知
-- id: nav_tx_shared_topic_client # 向导航串口发送共享主题的客户端
-  name: SharedTopicClient # 模块类型
-  constructor_args:
-    uart_name: usb_otg_hs_navigation_cdc # 发送端 USB CDC，与导航端配置保持一致
-    slot_count: 64 # 发送队列槽位数
-    topic_configs: # 发送给导航端的主题列表
-    - team_info # 己方队伍成员位置与血量
-    - game_info # 比赛状态与敌方基地血量
-    - online_info # 本机在线裁判与位置状态
-    - offline_info # 双板底盘 yaw 与离线状态
-    - radar_info # 雷达摘要
-    - ahrs_quaternion # 云台姿态，视觉时间线输入
-    - nav_gimbal_feedback # 云台与发射机构反馈
-    - nav_link_diagnostics # 下行接收计数，用于双向链路验证
+    cmd: '@cmd'
+    uart_name: usb_talos_cdc
+    gyro_topic_name: gimbal_gyro
+    euler_topic_name: gimbal_euler
+    launcher_topic_name: launcher_ref
+    referee_topic_name: sentry_ref
+    task_stack_depth: 2048
+    thread_priority: LibXR::Thread::Priority::MEDIUM
