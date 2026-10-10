@@ -388,7 +388,8 @@ modules:
         target_module: launcher
         target_event: InfantryLauncher::LauncherEvent::SET_FRICMODE_READY
 - id: nav_host_data # 导航主机串口数据桥接模块
-  name: NavHostData # 模块类型
+  name: HostDataLink # 模块类型
+  entry_header: HostDataLink.hpp
   constructor_args:
     cmd: '@cmd' # 导航与视觉命令统一写入 CMD
     uart_name: usb_otg_hs_navigation_cdc # 与导航主机连接的 USB CDC
@@ -417,3 +418,6 @@ modules:
     - online_info # 本机在线裁判与位置状态
     - offline_info # 双板底盘 yaw 与离线状态
     - radar_info # 雷达摘要
+    - ahrs_quaternion # 云台姿态，视觉时间线输入
+    - nav_gimbal_feedback # 云台与发射机构反馈
+    - nav_link_diagnostics # 下行接收计数，用于双向链路验证
