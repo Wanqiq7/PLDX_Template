@@ -1,7 +1,8 @@
-global_settings:
-  monitor_sleep_ms: 1000
 modules:
-- id: blink_led
-  name: BlinkLED
-  constructor_args:
-    blink_cycle: 250
+  - id: blink_led
+    module: pldx/BlinkLED
+    args:
+      - led: LED_B
+      - blink_cycle: 250
+settings:
+  monitor_sleep_ms: 1000

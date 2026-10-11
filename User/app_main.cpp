@@ -18,7 +18,6 @@
 #include "stm32_usb_dev.hpp"
 #include "stm32_watchdog.hpp"
 #include "flash_map.hpp"
-#include "app_framework.hpp"
 #include <xrobot_main.hpp>
 
 using namespace LibXR;
@@ -36,13 +35,13 @@ class ApplicationCDCUart final : public LibXR::USB::CDCUart
  public:
   using LibXR::USB::CDCUart::CDCUart;
 
-  ErrorCode SetConfig(UART::Configuration cfg) override
+  ErrorCode SetConfig(UART::Configuration cfg, bool in_isr = false) override
   {
     if (GetCommInEndpoint() == nullptr)
     {
       return ErrorCode::OK;
     }
-    return LibXR::USB::CDCUart::SetConfig(cfg);
+    return LibXR::USB::CDCUart::SetConfig(cfg, in_isr);
   }
 };
 /* User Code End 1 */
@@ -91,71 +90,71 @@ extern "C" void app_main(void) {
   /* User Code End 2 */
   // clang-format off
   // NOLINTBEGIN
-  STM32TimerTimebase timebase(&htim2);
+  static STM32TimerTimebase timebase(&htim2);
   PlatformInit(2, 2048);
-  STM32PowerManager power_manager;
+  static STM32PowerManager power_manager;
 
   /* GPIO Configuration */
-  STM32GPIO USER_KEY(USER_KEY_GPIO_Port, USER_KEY_Pin, EXTI0_IRQn);
-  STM32GPIO ACCL_CS(ACCL_CS_GPIO_Port, ACCL_CS_Pin);
-  STM32GPIO GYRO_CS(GYRO_CS_GPIO_Port, GYRO_CS_Pin);
-  STM32GPIO HW0(HW0_GPIO_Port, HW0_Pin);
-  STM32GPIO HW1(HW1_GPIO_Port, HW1_Pin);
-  STM32GPIO HW2(HW2_GPIO_Port, HW2_Pin);
-  STM32GPIO ACCL_INT(ACCL_INT_GPIO_Port, ACCL_INT_Pin, EXTI4_IRQn);
-  STM32GPIO GYRO_INT(GYRO_INT_GPIO_Port, GYRO_INT_Pin, EXTI9_5_IRQn);
-  STM32GPIO CAMERA(CAMERA_GPIO_Port, CAMERA_Pin);
-  STM32GPIO IMU_INT(IMU_INT_GPIO_Port, IMU_INT_Pin, EXTI1_IRQn);
-  STM32GPIO CMPS_INT(CMPS_INT_GPIO_Port, CMPS_INT_Pin, EXTI3_IRQn);
-  STM32GPIO CMPS_RST(CMPS_RST_GPIO_Port, CMPS_RST_Pin);
-  STM32GPIO LED_B(LED_B_GPIO_Port, LED_B_Pin);
-  STM32GPIO LED_G(LED_G_GPIO_Port, LED_G_Pin);
-  STM32GPIO LED_R(LED_R_GPIO_Port, LED_R_Pin);
+  static STM32GPIO USER_KEY(USER_KEY_GPIO_Port, USER_KEY_Pin, EXTI0_IRQn);
+  static STM32GPIO ACCL_CS(ACCL_CS_GPIO_Port, ACCL_CS_Pin);
+  static STM32GPIO GYRO_CS(GYRO_CS_GPIO_Port, GYRO_CS_Pin);
+  static STM32GPIO HW0(HW0_GPIO_Port, HW0_Pin);
+  static STM32GPIO HW1(HW1_GPIO_Port, HW1_Pin);
+  static STM32GPIO HW2(HW2_GPIO_Port, HW2_Pin);
+  static STM32GPIO ACCL_INT(ACCL_INT_GPIO_Port, ACCL_INT_Pin, EXTI4_IRQn);
+  static STM32GPIO GYRO_INT(GYRO_INT_GPIO_Port, GYRO_INT_Pin, EXTI9_5_IRQn);
+  static STM32GPIO CAMERA(CAMERA_GPIO_Port, CAMERA_Pin);
+  static STM32GPIO IMU_INT(IMU_INT_GPIO_Port, IMU_INT_Pin, EXTI1_IRQn);
+  static STM32GPIO CMPS_INT(CMPS_INT_GPIO_Port, CMPS_INT_Pin, EXTI3_IRQn);
+  static STM32GPIO CMPS_RST(CMPS_RST_GPIO_Port, CMPS_RST_Pin);
+  static STM32GPIO LED_B(LED_B_GPIO_Port, LED_B_Pin);
+  static STM32GPIO LED_G(LED_G_GPIO_Port, LED_G_Pin);
+  static STM32GPIO LED_R(LED_R_GPIO_Port, LED_R_Pin);
 
-  STM32ADC adc3(&hadc3, adc3_buf, {ADC_CHANNEL_8}, 3.3);
-  auto adc3_adc_channel_8 = adc3.GetChannel(0);
+  static STM32ADC adc3(&hadc3, adc3_buf, {ADC_CHANNEL_8}, 3.3);
+  static auto adc3_adc_channel_8 = adc3.GetChannel(0);
   UNUSED(adc3_adc_channel_8);
 
-  STM32PWM pwm_tim1_ch1(&htim1, TIM_CHANNEL_1, false);
-  STM32PWM pwm_tim1_ch2(&htim1, TIM_CHANNEL_2, false);
-  STM32PWM pwm_tim1_ch3(&htim1, TIM_CHANNEL_3, false);
-  STM32PWM pwm_tim1_ch4(&htim1, TIM_CHANNEL_4, false);
+  static STM32PWM pwm_tim1_ch1(&htim1, TIM_CHANNEL_1, false);
+  static STM32PWM pwm_tim1_ch2(&htim1, TIM_CHANNEL_2, false);
+  static STM32PWM pwm_tim1_ch3(&htim1, TIM_CHANNEL_3, false);
+  static STM32PWM pwm_tim1_ch4(&htim1, TIM_CHANNEL_4, false);
 
-  STM32PWM pwm_tim10_ch1(&htim10, TIM_CHANNEL_1, false);
+  static STM32PWM pwm_tim10_ch1(&htim10, TIM_CHANNEL_1, false);
 
-  STM32PWM pwm_tim3_ch3(&htim3, TIM_CHANNEL_3, false);
+  static STM32PWM pwm_tim3_ch3(&htim3, TIM_CHANNEL_3, false);
 
-  STM32PWM pwm_tim4_ch3(&htim4, TIM_CHANNEL_3, false);
+  static STM32PWM pwm_tim4_ch3(&htim4, TIM_CHANNEL_3, false);
 
-  STM32PWM pwm_tim8_ch1(&htim8, TIM_CHANNEL_1, false);
-  STM32PWM pwm_tim8_ch2(&htim8, TIM_CHANNEL_2, false);
-  STM32PWM pwm_tim8_ch3(&htim8, TIM_CHANNEL_3, false);
+  static STM32PWM pwm_tim8_ch1(&htim8, TIM_CHANNEL_1, false);
+  static STM32PWM pwm_tim8_ch2(&htim8, TIM_CHANNEL_2, false);
+  static STM32PWM pwm_tim8_ch3(&htim8, TIM_CHANNEL_3, false);
 
-  STM32SPI spi1(&hspi1, spi1_rx_buf, spi1_tx_buf, 3);
+  static STM32SPI spi1(&hspi1, spi1_rx_buf, spi1_tx_buf, 3);
 
-  STM32UART usart1(&huart1,
+  static STM32UART usart1(&huart1,
               usart1_rx_buf, usart1_tx_buf, 5);
 
-  STM32UART usart3(&huart3,
+  static STM32UART usart3(&huart3,
               usart3_rx_buf, {nullptr, 0}, 5);
 
-  STM32I2C i2c1(&hi2c1, i2c1_buf, 3);
+  static STM32I2C i2c1(&hi2c1, i2c1_buf, 3);
 
-  STM32I2C i2c3(&hi2c3, i2c3_buf, 3);
+  static STM32I2C i2c3(&hi2c3, i2c3_buf, 3);
 
-  STM32CAN can1(&hcan1, 5);
+  static STM32CAN can1(&hcan1, 5);
 
-  STM32CAN can2(&hcan2, 8);
+  static STM32CAN can2(&hcan2, 8);
 
   static constexpr auto USB_OTG_FS_LANG_PACK = LibXR::USB::DescriptorStrings::MakeLanguagePack(
       LibXR::USB::DescriptorStrings::Language::EN_US, "QDU-Future", "MainCtrl",
       "QDU-Future-MainCtrl-89ABCDEF0123456701234567");
-  ApplicationCDCUart usb_otg_fs_talos_cdc(
+  static ApplicationCDCUart usb_otg_fs_talos_cdc(
       LibXR::USB::Endpoint::EPNumber::EP1,
       LibXR::USB::Endpoint::EPNumber::EP1,
       LibXR::USB::Endpoint::EPNumber::EP2,
       256, 256, 15, "XRUSB CDC Control", "Talos Visual Data");
-  STM32USBDeviceOtgFS usb_fs(
+  static STM32USBDeviceOtgFS usb_fs(
       &hpcd_USB_OTG_FS,
       256,
       {usb_otg_fs_ep0_out_buf, usb_otg_fs_ep1_out_buf},
@@ -173,56 +172,53 @@ extern "C" void app_main(void) {
   STDIO::read_ = nullptr;
   STDIO::write_ = nullptr;
   // 模块调试命令文件注册所需，不挂载终端。
-  RamFS ramfs("XRobot");
+  static RamFS ramfs("XRobot");
 
-  LibXR::HardwareContainer peripherals{
-    LibXR::Entry<LibXR::PowerManager>({power_manager, {"power_manager"}}),
-    LibXR::Entry<LibXR::GPIO>({USER_KEY, {"USER_KEY", "wakeup_key"}}),
-    LibXR::Entry<LibXR::GPIO>({ACCL_CS, {"ACCL_CS", "bmi088_accl_cs"}}),
-    LibXR::Entry<LibXR::GPIO>({GYRO_CS, {"GYRO_CS", "bmi088_gyro_cs"}}),
-    LibXR::Entry<LibXR::GPIO>({HW0, {"HW0"}}),
-    LibXR::Entry<LibXR::GPIO>({HW1, {"HW1"}}),
-    LibXR::Entry<LibXR::GPIO>({HW2, {"HW2"}}),
-    LibXR::Entry<LibXR::GPIO>({ACCL_INT, {"ACCL_INT", "bmi088_accl_int"}}),
-    LibXR::Entry<LibXR::GPIO>({GYRO_INT, {"GYRO_INT", "bmi088_gyro_int"}}),
-    LibXR::Entry<LibXR::SPI>({spi1, {"spi1", "spi_bmi088"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim10_ch1, {"pwm_bmi088_heat", "pwm_tim10_ch1"}}),
-    LibXR::Entry<LibXR::GPIO>({CMPS_INT, {"CMPS_INT", "ist8310_int"}}),
-    LibXR::Entry<LibXR::GPIO>({CMPS_RST, {"CMPS_RST", "ist8310_rst"}}),
-    LibXR::Entry<LibXR::GPIO>({LED_B, {"LED", "LED_B"}}),
-    LibXR::Entry<LibXR::GPIO>({LED_G, {"LED_G"}}),
-    LibXR::Entry<LibXR::GPIO>({LED_R, {"LED_R"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch1, {"pwm_a", "pwm_launcher_cover_servo", "pwm_tim1_ch1"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch2, {"pwm_b", "pwm_tim1_ch2"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch3, {"pwm_c", "pwm_tim1_ch3"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch4, {"pwm_d", "pwm_tim1_ch4"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim3_ch3, {"pwm_5v", "pwm_tim3_ch3"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim4_ch3, {"pwm_buzzer", "pwm_tim4_ch3"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim8_ch1, {"pwm_e", "pwm_tim8_ch1"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim8_ch2, {"pwm_f", "pwm_tim8_ch2"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim8_ch3, {"pwm_g", "pwm_tim8_ch3"}}),
-    LibXR::Entry<LibXR::ADC>({adc3_adc_channel_8, {"adc3_adc_channel_8", "adc_bat"}}),
-    LibXR::Entry<LibXR::UART>({usart1, {"imu_data_uart", "uart_referee", "usart1"}}),
-    LibXR::Entry<LibXR::UART>({usart3, {"uart_dr16", "usart3"}}),
-    LibXR::Entry<LibXR::I2C>({i2c1, {"i2c1"}}),
-    LibXR::Entry<LibXR::I2C>({i2c3, {"i2c3", "i2c_ist8310"}}),
-    LibXR::Entry<LibXR::CAN>({can1, {"can1", "imu_can"}}),
-    LibXR::Entry<LibXR::CAN>({can2, {"can2"}}),
-    LibXR::Entry<LibXR::RamFS>({ramfs, {"ramfs"}}),
-     LibXR::Entry<LibXR::UART>({usb_otg_fs_talos_cdc,
-                                {"usb_talos_cdc", "usb_otg_fs_talos_cdc", "usb_otg_fs_navigation_cdc", "usb_otg_hs_navigation_cdc",
-                                 "usb_navigation_cdc", "usb_navigation_cdc_hs"}}),
-    LibXR::Entry<LibXR::GPIO>({CAMERA, {"CAMERA"}}),
-    LibXR::Entry<LibXR::GPIO>({IMU_INT, {"IMU_INT"}})
-  };
+
 
   // clang-format on
   // NOLINTEND
   /* User Code Begin 3 */
-  STM32Flash flash(FLASH_SECTORS, FLASH_SECTOR_NUMBER);
-  LibXR::DatabaseRaw<1> database(flash);
+  static STM32Flash flash(FLASH_REGIONS, FLASH_REGION_NUMBER);
+  static LibXR::DatabaseRaw<STM32Flash::MIN_WRITE_SIZE> database(flash);
 
-  peripherals.Register(LibXR::Entry<LibXR::Database>{database, {"database"}});
-  XRobotMain(peripherals);
+  XR_REGISTER(power_manager, LibXR::PowerManager);
+  XR_REGISTER(USER_KEY, LibXR::GPIO);
+  XR_REGISTER(ACCL_CS, LibXR::GPIO);
+  XR_REGISTER(GYRO_CS, LibXR::GPIO);
+  XR_REGISTER(HW0, LibXR::GPIO);
+  XR_REGISTER(HW1, LibXR::GPIO);
+  XR_REGISTER(HW2, LibXR::GPIO);
+  XR_REGISTER(ACCL_INT, LibXR::GPIO);
+  XR_REGISTER(GYRO_INT, LibXR::GPIO);
+  XR_REGISTER(spi1, LibXR::SPI);
+  XR_REGISTER(pwm_tim10_ch1, LibXR::PWM);
+  XR_REGISTER(CMPS_INT, LibXR::GPIO);
+  XR_REGISTER(CMPS_RST, LibXR::GPIO);
+  XR_REGISTER(LED_B, LibXR::GPIO);
+  XR_REGISTER(LED_G, LibXR::GPIO);
+  XR_REGISTER(LED_R, LibXR::GPIO);
+  XR_REGISTER(pwm_tim1_ch1, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch2, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch3, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch4, LibXR::PWM);
+  XR_REGISTER(pwm_tim3_ch3, LibXR::PWM);
+  XR_REGISTER(pwm_tim4_ch3, LibXR::PWM);
+  XR_REGISTER(pwm_tim8_ch1, LibXR::PWM);
+  XR_REGISTER(pwm_tim8_ch2, LibXR::PWM);
+  XR_REGISTER(pwm_tim8_ch3, LibXR::PWM);
+  XR_REGISTER(adc3_adc_channel_8, LibXR::ADC);
+  XR_REGISTER(usart1, LibXR::UART);
+  XR_REGISTER(usart3, LibXR::UART);
+  XR_REGISTER(i2c1, LibXR::I2C);
+  XR_REGISTER(i2c3, LibXR::I2C);
+  XR_REGISTER(can1, LibXR::CAN);
+  XR_REGISTER(can2, LibXR::CAN);
+  XR_REGISTER(ramfs, LibXR::RamFS);
+  XR_REGISTER(usb_otg_fs_talos_cdc, LibXR::UART);
+  XR_REGISTER(CAMERA, LibXR::GPIO);
+  XR_REGISTER(IMU_INT, LibXR::GPIO);
+  XR_REGISTER(database, LibXR::Database);
+  XROBOT_MAIN();
   /* User Code End 3 */
 }

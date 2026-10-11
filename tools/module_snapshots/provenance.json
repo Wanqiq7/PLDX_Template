@@ -1,0 +1,182 @@
+{
+  "pldx/BMI088": {
+    "upstream_repo": "https://github.com/GUET-PLDX/BMI088.git",
+    "upstream_commit": "79cd01e07ca220151928c370ab7b1622b37cca25",
+    "snapshot_commit": "e1d97e81d2fdc2a14bc730a782af98773af315de",
+    "pre_existing_status": ""
+  },
+  "pldx/BlinkLED": {
+    "upstream_repo": "https://github.com/GUET-PLDX/BlinkLED.git",
+    "upstream_commit": "1bf647b192601c91f3c7edd9d15e2d7a88040dce",
+    "snapshot_commit": "9dc55359e6209d439020e36fe9e830a85bf78f3f",
+    "pre_existing_status": ""
+  },
+  "pldx/BuzzerAlarm": {
+    "upstream_repo": "https://github.com/GUET-PLDX/BuzzerAlarm.git",
+    "upstream_commit": "761f221d590563ef1a74aeb2f2d8bb1173700e7b",
+    "snapshot_commit": "9f526446b883b9498eb58b35eb5e86270be5a2a5",
+    "pre_existing_status": ""
+  },
+  "pldx/CMD": {
+    "upstream_repo": "https://github.com/GUET-PLDX/CMD.git",
+    "upstream_commit": "311952b42ec56ed80b00d20c25f82d07815b2474",
+    "snapshot_commit": "0c794b5a243a76e00193f5f78b6d2284d9eaff08",
+    "pre_existing_status": ""
+  },
+  "pldx/CameraSync": {
+    "upstream_repo": "https://github.com/GUET-PLDX/CameraSync.git",
+    "upstream_commit": "79ec46080f3c55c36c4b8769ed2149896f1c7359",
+    "snapshot_commit": "fccee27b1735cc9144e631c2233dc5ddb1e425f1",
+    "pre_existing_status": ""
+  },
+  "pldx/Chassis": {
+    "upstream_repo": "https://github.com/GUET-PLDX/Chassis.git",
+    "upstream_commit": "e41b45b04953bac055e9a1c7139a41dccbc09f1e",
+    "snapshot_commit": "b8e2cae01bcab74c867e7e5bbbf91d9d959b760f",
+    "pre_existing_status": ""
+  },
+  "pldx/DMMotor": {
+    "upstream_repo": "https://github.com/GUET-PLDX/DMMotor.git",
+    "upstream_commit": "f126d67717ee3e090d38c773bb255bf6177837fd",
+    "snapshot_commit": "d649a0bc063a5c52dc1ef2d2840d25403d7d4344",
+    "pre_existing_status": ""
+  },
+  "pldx/DR16": {
+    "upstream_repo": "https://github.com/GUET-PLDX/DR16.git",
+    "upstream_commit": "bf373193041eae9b5b663a1cf1278fa9ce806ae0",
+    "snapshot_commit": "e8da7836b70f97751187129bc44d2aa50631981d",
+    "pre_existing_status": ""
+  },
+  "pldx/Dart": {
+    "upstream_repo": "https://github.com/GUET-PLDX/Dart.git",
+    "upstream_commit": "758cd0058e33c8af704c33c2bbcd0dce16bc31e1",
+    "snapshot_commit": "9c65ae1c31c3e7652a0dd48e5df10829249c8b55",
+    "pre_existing_status": ""
+  },
+  "pldx/DebugCore": {
+    "upstream_repo": "https://github.com/GUET-PLDX/DebugCore.git",
+    "upstream_commit": "d6c8efb3f32b8cdac1fd0f1cc72ad8c8aea38658",
+    "snapshot_commit": "081d13f5cdde4a9c7767fb43ae21308976003d51",
+    "pre_existing_status": ""
+  },
+  "pldx/DualBoard": {
+    "upstream_repo": "https://github.com/GUET-PLDX/DualBoard.git",
+    "upstream_commit": "a7246e81c8fd0506d2dca9ddb627955e5438f6fa",
+    "snapshot_commit": "449213110bf5120c92923b07c297d640c1a4c9e6",
+    "pre_existing_status": " M tests/dual_board_control_frame_test.cpp\n"
+  },
+  "pldx/EventBinder": {
+    "upstream_repo": "https://github.com/GUET-PLDX/EventBinder.git",
+    "upstream_commit": "185e5388cd2f4b748fa1a8cf939e1a3d33e9eca3",
+    "snapshot_commit": "0f00c65dcff135e5de870e55d02e55f9d7921846",
+    "pre_existing_status": ""
+  },
+  "pldx/Gimbal": {
+    "upstream_repo": "https://github.com/GUET-PLDX/Gimbal.git",
+    "upstream_commit": "af66714a978e89f6198d265d7e54b7276a3fe6b5",
+    "snapshot_commit": "c8753fd35c7fc819dc17168b08b565b1b95eaf32",
+    "pre_existing_status": ""
+  },
+  "pldx/HeroLauncher": {
+    "upstream_repo": "https://github.com/GUET-PLDX/HeroLauncher.git",
+    "upstream_commit": "e7b519b32bb9f75983259f89b92fe565771fb9e9",
+    "snapshot_commit": "890351da537b76fd9c1ca9df5632e26e70f8df12",
+    "pre_existing_status": ""
+  },
+  "pldx/HostData": {
+    "upstream_repo": "https://github.com/GUET-PLDX/HostData.git",
+    "upstream_commit": "9009c5ba6549d72ad6f7351cb65f9ad1ff2a7cc7",
+    "snapshot_commit": "772c795d5ddde71ec54712fdcba4c8e839557e6a",
+    "pre_existing_status": ""
+  },
+  "pldx/HostDataLink": {
+    "upstream_repo": "https://github.com/GUET-PLDX/NavHostData.git",
+    "upstream_commit": "febee5362d8a4db849e40399bc2b83e9a9cb24cf",
+    "snapshot_commit": "30ba8ea0f32d3565f4535fe65982bf613b8dd90f",
+    "pre_existing_status": " M HostDataLink.hpp\n M tests/host_data_link_config_regression.py\n"
+  },
+  "pldx/IST8310": {
+    "upstream_repo": "https://github.com/GUET-PLDX/IST8310.git",
+    "upstream_commit": "40fcede3612d89f2f92ce0f346a61966cf569568",
+    "snapshot_commit": "fb72a8f2060c8cf2582ba12aaae70a932d164b85",
+    "pre_existing_status": ""
+  },
+  "pldx/InfantryLauncher": {
+    "upstream_repo": "https://github.com/GUET-PLDX/InfantryLauncher.git",
+    "upstream_commit": "bf976bfcaa775c4f9845f0fc349033b8f126861f",
+    "snapshot_commit": "698b37f026f1ecc96a764ff1decde9c6cda868f1",
+    "pre_existing_status": ""
+  },
+  "pldx/MadgwickAHRS": {
+    "upstream_repo": "https://github.com/GUET-PLDX/MadgwickAHRS.git",
+    "upstream_commit": "299e9bef070e3f6b9af795dc1ed941b59f7094f6",
+    "snapshot_commit": "989c4cf4b514c61f8860abfdf6f1ae6feddeaf85",
+    "pre_existing_status": ""
+  },
+  "pldx/MiniGimbal": {
+    "upstream_repo": "https://github.com/GUET-PLDX/MiniGimbal.git",
+    "upstream_commit": "6c5e3e19d5da2bf32d619678d79a5d1b53ee94ad",
+    "snapshot_commit": "41b642784627c3b1797f832ed28998cfbcbdacae",
+    "pre_existing_status": ""
+  },
+  "pldx/Motor": {
+    "upstream_repo": "https://github.com/GUET-PLDX/Motor.git",
+    "upstream_commit": "e06611fa6106dc217896da6a6a08e32e2d48d290",
+    "snapshot_commit": "f10c5f4f49ed3bf644ad0c7e236856357c922e5c",
+    "pre_existing_status": ""
+  },
+  "pldx/PowerControl": {
+    "upstream_repo": "https://github.com/GUET-PLDX/PowerControl.git",
+    "upstream_commit": "3e07955c15ecdceb09e511ac51d1189d5dcc3a13",
+    "snapshot_commit": "57780e21fcefe1ad08f1b91feed907d7d61ebd8f",
+    "pre_existing_status": ""
+  },
+  "pldx/RMMotor": {
+    "upstream_repo": "https://github.com/GUET-PLDX/RMMotor.git",
+    "upstream_commit": "47fd0ac2e8f8acdea779e5ea4d0d1ccb35403666",
+    "snapshot_commit": "7e4392ee964877777182ee4cdd17d5d4db1c994a",
+    "pre_existing_status": ""
+  },
+  "pldx/Referee": {
+    "upstream_repo": "https://github.com/GUET-PLDX/Referee.git",
+    "upstream_commit": "aa872c33e8c97a334d4a49456d507dbb76a3a678",
+    "snapshot_commit": "401205fd35b87aefbd848800c1345e96f94387f5",
+    "pre_existing_status": ""
+  },
+  "pldx/SentryProtocol": {
+    "upstream_repo": "https://github.com/GUET-PLDX/SentryProtocol.git",
+    "upstream_commit": "318c42f09f4f8a8a308321ae98863d17ecd7ead7",
+    "snapshot_commit": "f94b06fec2bb41ab6abd107b270af80e9e0ab017",
+    "pre_existing_status": ""
+  },
+  "pldx/SharedTopic": {
+    "upstream_repo": "https://github.com/GUET-PLDX/SharedTopic.git",
+    "upstream_commit": "f6ca1a9b8134def9a4a6d5bbfffc3ad2d8f5198d",
+    "snapshot_commit": "6d3868321b884963fad5adc983c5a28e83c7559d",
+    "pre_existing_status": ""
+  },
+  "pldx/SharedTopicClient": {
+    "upstream_repo": "https://github.com/GUET-PLDX/SharedTopicClient.git",
+    "upstream_commit": "9dfec1e2c68c06eebb2d18d38259d3a42435ff38",
+    "snapshot_commit": "a8ef9820bee4271e2c4da505f0050abab9427623",
+    "pre_existing_status": ""
+  },
+  "pldx/SuperPower": {
+    "upstream_repo": "https://github.com/GUET-PLDX/SuperPower.git",
+    "upstream_commit": "2bc9428f5360624a891f263a4e717fa4a29ba8a5",
+    "snapshot_commit": "6762b1484a63f2e7b972127c6c3a68b6216e82b8",
+    "pre_existing_status": ""
+  },
+  "pldx/TalosLink": {
+    "upstream_repo": "https://github.com/GUET-PLDX/TalosLink.git",
+    "upstream_commit": "6ce676f1cd517106a16ab0f836c93af95cc4af3e",
+    "snapshot_commit": "979d1ab0fa0ee327d5ec983a742bc9d6d9c2823e",
+    "pre_existing_status": ""
+  },
+  "pldx/VT13": {
+    "upstream_repo": "https://github.com/GUET-PLDX/VT13.git",
+    "upstream_commit": "f7c66e32c736cee37c7829630f02c3f1d37090f2",
+    "snapshot_commit": "5a4407849b0a7cc6205816fa13a98f705e5efdb5",
+    "pre_existing_status": ""
+  }
+}

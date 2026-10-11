@@ -399,7 +399,7 @@ BUILD_TYPE="$(preset_build_type "${PRESET:-$DEFAULT_PRESET}")"
 
 resolve_local_python_tools
 
-command_exists xrobot_gen_main || die 'xrobot_gen_main not found in PATH.'
+command_exists xrobot || die 'xrobot 1.0.1 not found in PATH.'
 
 resolve_cube_cli || die 'cube not found in PATH or STM32 VS Code extension directories.'
 resolve_cube_cmake || die 'cube-cmake not found in PATH or STM32 VS Code extension directories.'
@@ -429,6 +429,8 @@ fi
 
 # ---------------- 2/3 configure ----------------
 
+echo "[2/3] Generating the static XRobot entry..."
+run_or_die xrobot gen -c "$CONFIG"
 echo "[2/3] Configuring with cube-cmake ($BUILD_TARGET_DESC)..."
 [ -n "$BUILD_DIR" ] && reset_incompatible_cmake_cache
 

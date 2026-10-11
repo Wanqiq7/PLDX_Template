@@ -32,24 +32,20 @@ jobs:
       - name: init submodule
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE" && git submodule update --init --recursive
 
-      - name: install pip packages
-        run: pip install libxr xrobot
+      - name: install pinned tools
+        run: pip install -r tools/requirements.txt
 
-      - name: config libxr
-        run: xr_cubemx_cfg -d ./ --xrobot
+      - name: resolve frozen static modules
+        run: xrobot setup --frozen
 
-      - name: xrobot generate code
-        run: xrobot_setup
-
-      - name: config cmake
-        run: |
-          export GCC_TOOLCHAIN_ROOT=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin
-          export CLANG_GCC_CMSIS_COMPILER=/opt/st-arm-clang
-          cmake . -DCMAKE_TOOLCHAIN_FILE:STRING=cmake/starm-clang.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Bbuild -G Ninja
+      - name: generate selected product
+        run: xrobot gen -c User/RobotConfig/${{ matrix.robot_config }}.yaml
 
       - name: build ${{ matrix.robot_config }}
         run: |
-          xrobot_gen_main --config User/RobotConfig/${{ matrix.robot_config }}.yaml
+          export GCC_TOOLCHAIN_ROOT=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin
+          export CLANG_GCC_CMSIS_COMPILER=/opt/st-arm-clang
+          cmake -S . -B build -G Ninja --toolchain cmake/starm-clang.cmake -DCMAKE_BUILD_TYPE=Debug -DXROBOT_CONFIG=User/RobotConfig/${{ matrix.robot_config }}.yaml
           cmake --build build
 
       - name: package firmware

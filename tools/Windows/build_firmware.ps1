@@ -547,8 +547,8 @@ if (-not (Test-Path -LiteralPath $ConfigPath -PathType Leaf)) {
 
 Resolve-LocalPythonTools
 
-if (-not (Test-CommandExists 'xrobot_gen_main') -and -not (Test-CommandExists 'xrobot_gen_main.exe')) {
-  throw 'Error: xrobot_gen_main not found in PATH.'
+if (-not (Test-CommandExists 'xrobot') -and -not (Test-CommandExists 'xrobot.exe')) {
+  throw 'Error: xrobot 1.0.1 not found in PATH.'
 }
 
 if (-not (Resolve-CubeCli)) {
@@ -588,6 +588,8 @@ if (-not $SkipFormat) {
   Write-Host '[1/3] Skip clang-format.'
 }
 
+Write-Host "[2/3] Generating the static XRobot entry..."
+Invoke-Native -FilePath (Get-CommandPath 'xrobot') -ArgumentList @('gen', '-c', $ConfigPath)
 Write-Host "[2/3] Configuring with cube-cmake ($BuildTargetDesc)..."
 if ($BuildDir) {
   Reset-IncompatibleCMakeCache $BuildPath
