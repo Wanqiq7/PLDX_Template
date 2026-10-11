@@ -30,3 +30,6 @@ Modules/*
 # Tool working directories
 .marscode/
 .workbuddy/
+
+# Generated module build integration (restored by xrobot setup)
+/Modules/CMakeLists.txt
