@@ -5,7 +5,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(LIBXR_SYSTEM FreeRTOS)
 set(LIBXR_DRIVER st)
 set(XROBOT_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Modules)
-add_subdirectory(Middlewares/Third_Party/LibXR)
+set(LIBXR_SOURCE_DIR "${CMAKE_SOURCE_DIR}/.tooling/LibXR-v2.0.1" CACHE PATH
+    "LibXR v2.0.1 checkout (see tools/setup_libxr2.py)")
+if(NOT EXISTS "${LIBXR_SOURCE_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR "LibXR v2.0.1 is missing; run python3 tools/setup_libxr2.py")
+endif()
+add_subdirectory("${LIBXR_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/LibXR")
+add_dependencies(xrobot_freshness_check xrobot_generate)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(xr PRIVATE -Wno-tautological-compare -Wno-maybe-uninitialized)
 endif()
@@ -29,9 +35,6 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(${CMAKE_PROJECT_NAME} BEFORE PRIVATE
-    "${XROBOT_GENERATED_DIR}"
-)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths

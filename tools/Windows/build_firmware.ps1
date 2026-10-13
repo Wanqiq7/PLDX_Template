@@ -181,6 +181,11 @@ function Resolve-CubeCli {
 }
 
 function Resolve-CubeCMake {
+  $cmake = Get-CommandPath 'cmake'
+  if ($cmake) {
+    $script:CubeCMakeBin = $cmake
+    return $true
+  }
   foreach ($name in @('cube-cmake', 'cube-cmake.exe')) {
     $fromPath = Get-CommandPath $name
     if ($fromPath) {
@@ -546,13 +551,10 @@ if (-not (Test-Path -LiteralPath $ConfigPath -PathType Leaf)) {
 }
 
 Resolve-LocalPythonTools
+$env:PATH = "$(Join-Path $RepoRoot '.venv-xrobot2/Scripts');$env:PATH"
 
-if (-not (Test-CommandExists 'xrobot_gen_main') -and -not (Test-CommandExists 'xrobot_gen_main.exe')) {
-  throw 'Error: xrobot_gen_main not found in PATH.'
-}
-
-if (-not (Resolve-CubeCli)) {
-  throw 'Error: cube not found in PATH or STM32 VS Code extension directories.'
+if (-not (Test-CommandExists 'xrobot') -and -not (Test-CommandExists 'xrobot.exe')) {
+  throw 'Error: xrobot 1.0.1 not found in PATH; run python tools/setup_libxr2.py.'
 }
 
 if (-not (Resolve-CubeCMake)) {

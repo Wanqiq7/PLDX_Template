@@ -17,8 +17,6 @@
 #include "stm32_uart.hpp"
 #include "stm32_usb_dev.hpp"
 #include "stm32_watchdog.hpp"
-#include "flash_map.hpp"
-#include "app_framework.hpp"
 #include <xrobot_main.hpp>
 
 using namespace LibXR;
@@ -36,13 +34,13 @@ class ApplicationCDCUart final : public LibXR::USB::CDCUart
  public:
   using LibXR::USB::CDCUart::CDCUart;
 
-  ErrorCode SetConfig(UART::Configuration cfg) override
+  ErrorCode SetConfig(UART::Configuration cfg, bool in_isr = false) override
   {
     if (GetCommInEndpoint() == nullptr)
     {
       return ErrorCode::OK;
     }
-    return LibXR::USB::CDCUart::SetConfig(cfg);
+    return LibXR::USB::CDCUart::SetConfig(cfg, in_isr);
   }
 };
 /* User Code End 1 */
@@ -175,54 +173,117 @@ extern "C" void app_main(void) {
   // 模块调试命令文件注册所需，不挂载终端。
   RamFS ramfs("XRobot");
 
-  LibXR::HardwareContainer peripherals{
-    LibXR::Entry<LibXR::PowerManager>({power_manager, {"power_manager"}}),
-    LibXR::Entry<LibXR::GPIO>({USER_KEY, {"USER_KEY", "wakeup_key"}}),
-    LibXR::Entry<LibXR::GPIO>({ACCL_CS, {"ACCL_CS", "bmi088_accl_cs"}}),
-    LibXR::Entry<LibXR::GPIO>({GYRO_CS, {"GYRO_CS", "bmi088_gyro_cs"}}),
-    LibXR::Entry<LibXR::GPIO>({HW0, {"HW0"}}),
-    LibXR::Entry<LibXR::GPIO>({HW1, {"HW1"}}),
-    LibXR::Entry<LibXR::GPIO>({HW2, {"HW2"}}),
-    LibXR::Entry<LibXR::GPIO>({ACCL_INT, {"ACCL_INT", "bmi088_accl_int"}}),
-    LibXR::Entry<LibXR::GPIO>({GYRO_INT, {"GYRO_INT", "bmi088_gyro_int"}}),
-    LibXR::Entry<LibXR::SPI>({spi1, {"spi1", "spi_bmi088"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim10_ch1, {"pwm_bmi088_heat", "pwm_tim10_ch1"}}),
-    LibXR::Entry<LibXR::GPIO>({CMPS_INT, {"CMPS_INT", "ist8310_int"}}),
-    LibXR::Entry<LibXR::GPIO>({CMPS_RST, {"CMPS_RST", "ist8310_rst"}}),
-    LibXR::Entry<LibXR::GPIO>({LED_B, {"LED", "LED_B"}}),
-    LibXR::Entry<LibXR::GPIO>({LED_G, {"LED_G"}}),
-    LibXR::Entry<LibXR::GPIO>({LED_R, {"LED_R"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch1, {"pwm_a", "pwm_launcher_cover_servo", "pwm_tim1_ch1"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch2, {"pwm_b", "pwm_tim1_ch2"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch3, {"pwm_c", "pwm_tim1_ch3"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim1_ch4, {"pwm_d", "pwm_tim1_ch4"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim3_ch3, {"pwm_5v", "pwm_tim3_ch3"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim4_ch3, {"pwm_buzzer", "pwm_tim4_ch3"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim8_ch1, {"pwm_e", "pwm_tim8_ch1"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim8_ch2, {"pwm_f", "pwm_tim8_ch2"}}),
-    LibXR::Entry<LibXR::PWM>({pwm_tim8_ch3, {"pwm_g", "pwm_tim8_ch3"}}),
-    LibXR::Entry<LibXR::ADC>({adc3_adc_channel_8, {"adc3_adc_channel_8", "adc_bat"}}),
-    LibXR::Entry<LibXR::UART>({usart1, {"imu_data_uart", "uart_referee", "usart1"}}),
-    LibXR::Entry<LibXR::UART>({usart3, {"uart_dr16", "usart3"}}),
-    LibXR::Entry<LibXR::I2C>({i2c1, {"i2c1"}}),
-    LibXR::Entry<LibXR::I2C>({i2c3, {"i2c3", "i2c_ist8310"}}),
-    LibXR::Entry<LibXR::CAN>({can1, {"can1", "imu_can"}}),
-    LibXR::Entry<LibXR::CAN>({can2, {"can2"}}),
-    LibXR::Entry<LibXR::RamFS>({ramfs, {"ramfs"}}),
-     LibXR::Entry<LibXR::UART>({usb_otg_fs_talos_cdc,
-                                {"usb_talos_cdc", "usb_otg_fs_talos_cdc", "usb_otg_fs_navigation_cdc", "usb_otg_hs_navigation_cdc",
-                                 "usb_navigation_cdc", "usb_navigation_cdc_hs"}}),
-    LibXR::Entry<LibXR::GPIO>({CAMERA, {"CAMERA"}}),
-    LibXR::Entry<LibXR::GPIO>({IMU_INT, {"IMU_INT"}})
-  };
+  XR_REGISTER(power_manager, LibXR::PowerManager);
+  XR_REGISTER(USER_KEY, LibXR::GPIO);
+  LibXR::GPIO& wakeup_key = USER_KEY;
+  XR_REGISTER(wakeup_key, LibXR::GPIO);
+  XR_REGISTER(ACCL_CS, LibXR::GPIO);
+  LibXR::GPIO& bmi088_accl_cs = ACCL_CS;
+  XR_REGISTER(bmi088_accl_cs, LibXR::GPIO);
+  XR_REGISTER(GYRO_CS, LibXR::GPIO);
+  LibXR::GPIO& bmi088_gyro_cs = GYRO_CS;
+  XR_REGISTER(bmi088_gyro_cs, LibXR::GPIO);
+  XR_REGISTER(HW0, LibXR::GPIO);
+  XR_REGISTER(HW1, LibXR::GPIO);
+  XR_REGISTER(HW2, LibXR::GPIO);
+  XR_REGISTER(ACCL_INT, LibXR::GPIO);
+  LibXR::GPIO& bmi088_accl_int = ACCL_INT;
+  XR_REGISTER(bmi088_accl_int, LibXR::GPIO);
+  XR_REGISTER(GYRO_INT, LibXR::GPIO);
+  LibXR::GPIO& bmi088_gyro_int = GYRO_INT;
+  XR_REGISTER(bmi088_gyro_int, LibXR::GPIO);
+  XR_REGISTER(spi1, LibXR::SPI);
+  LibXR::SPI& spi_bmi088 = spi1;
+  XR_REGISTER(spi_bmi088, LibXR::SPI);
+  LibXR::PWM& pwm_bmi088_heat = pwm_tim10_ch1;
+  XR_REGISTER(pwm_bmi088_heat, LibXR::PWM);
+  XR_REGISTER(pwm_tim10_ch1, LibXR::PWM);
+  XR_REGISTER(CMPS_INT, LibXR::GPIO);
+  LibXR::GPIO& ist8310_int = CMPS_INT;
+  XR_REGISTER(ist8310_int, LibXR::GPIO);
+  XR_REGISTER(CMPS_RST, LibXR::GPIO);
+  LibXR::GPIO& ist8310_rst = CMPS_RST;
+  XR_REGISTER(ist8310_rst, LibXR::GPIO);
+  LibXR::GPIO& LED = LED_B;
+  XR_REGISTER(LED, LibXR::GPIO);
+  XR_REGISTER(LED_B, LibXR::GPIO);
+  XR_REGISTER(LED_G, LibXR::GPIO);
+  XR_REGISTER(LED_R, LibXR::GPIO);
+  LibXR::PWM& pwm_a = pwm_tim1_ch1;
+  XR_REGISTER(pwm_a, LibXR::PWM);
+  LibXR::PWM& pwm_launcher_cover_servo = pwm_tim1_ch1;
+  XR_REGISTER(pwm_launcher_cover_servo, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch1, LibXR::PWM);
+  LibXR::PWM& pwm_b = pwm_tim1_ch2;
+  XR_REGISTER(pwm_b, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch2, LibXR::PWM);
+  LibXR::PWM& pwm_c = pwm_tim1_ch3;
+  XR_REGISTER(pwm_c, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch3, LibXR::PWM);
+  LibXR::PWM& pwm_d = pwm_tim1_ch4;
+  XR_REGISTER(pwm_d, LibXR::PWM);
+  XR_REGISTER(pwm_tim1_ch4, LibXR::PWM);
+  LibXR::PWM& pwm_5v = pwm_tim3_ch3;
+  XR_REGISTER(pwm_5v, LibXR::PWM);
+  XR_REGISTER(pwm_tim3_ch3, LibXR::PWM);
+  LibXR::PWM& pwm_buzzer = pwm_tim4_ch3;
+  XR_REGISTER(pwm_buzzer, LibXR::PWM);
+  XR_REGISTER(pwm_tim4_ch3, LibXR::PWM);
+  LibXR::PWM& pwm_e = pwm_tim8_ch1;
+  XR_REGISTER(pwm_e, LibXR::PWM);
+  XR_REGISTER(pwm_tim8_ch1, LibXR::PWM);
+  LibXR::PWM& pwm_f = pwm_tim8_ch2;
+  XR_REGISTER(pwm_f, LibXR::PWM);
+  XR_REGISTER(pwm_tim8_ch2, LibXR::PWM);
+  LibXR::PWM& pwm_g = pwm_tim8_ch3;
+  XR_REGISTER(pwm_g, LibXR::PWM);
+  XR_REGISTER(pwm_tim8_ch3, LibXR::PWM);
+  XR_REGISTER(adc3_adc_channel_8, LibXR::ADC);
+  LibXR::ADC& adc_bat = adc3_adc_channel_8;
+  XR_REGISTER(adc_bat, LibXR::ADC);
+  LibXR::UART& imu_data_uart = usart1;
+  XR_REGISTER(imu_data_uart, LibXR::UART);
+  LibXR::UART& uart_referee = usart1;
+  XR_REGISTER(uart_referee, LibXR::UART);
+  XR_REGISTER(usart1, LibXR::UART);
+  LibXR::UART& uart_dr16 = usart3;
+  XR_REGISTER(uart_dr16, LibXR::UART);
+  XR_REGISTER(usart3, LibXR::UART);
+  XR_REGISTER(i2c1, LibXR::I2C);
+  XR_REGISTER(i2c3, LibXR::I2C);
+  LibXR::I2C& i2c_ist8310 = i2c3;
+  XR_REGISTER(i2c_ist8310, LibXR::I2C);
+  XR_REGISTER(can1, LibXR::CAN);
+  LibXR::CAN& imu_can = can1;
+  XR_REGISTER(imu_can, LibXR::CAN);
+  XR_REGISTER(can2, LibXR::CAN);
+  XR_REGISTER(ramfs, LibXR::RamFS);
+  LibXR::UART& usb_talos_cdc = usb_otg_fs_talos_cdc;
+  XR_REGISTER(usb_talos_cdc, LibXR::UART);
+  XR_REGISTER(usb_otg_fs_talos_cdc, LibXR::UART);
+  LibXR::UART& usb_otg_fs_navigation_cdc = usb_otg_fs_talos_cdc;
+  XR_REGISTER(usb_otg_fs_navigation_cdc, LibXR::UART);
+  LibXR::UART& usb_otg_hs_navigation_cdc = usb_otg_fs_talos_cdc;
+  XR_REGISTER(usb_otg_hs_navigation_cdc, LibXR::UART);
+  LibXR::UART& usb_navigation_cdc = usb_otg_fs_talos_cdc;
+  XR_REGISTER(usb_navigation_cdc, LibXR::UART);
+  LibXR::UART& usb_navigation_cdc_hs = usb_otg_fs_talos_cdc;
+  XR_REGISTER(usb_navigation_cdc_hs, LibXR::UART);
+  XR_REGISTER(CAMERA, LibXR::GPIO);
+  XR_REGISTER(IMU_INT, LibXR::GPIO);
 
   // clang-format on
   // NOLINTEND
   /* User Code Begin 3 */
-  STM32Flash flash(FLASH_SECTORS, FLASH_SECTOR_NUMBER);
+  // STM32F407IGH6: four 16 KiB sectors, one 64 KiB sector, seven 128 KiB sectors.
+  // DatabaseRaw keeps the last two sectors, matching the existing storage addresses.
+  static constexpr LibXR::FlashRegion FLASH_REGIONS[] = {
+      {0x08000000, 0x4000, 4}, {0x08010000, 0x10000, 1},
+      {0x08020000, 0x20000, 7}};
+  STM32Flash flash(FLASH_REGIONS, 3);
   LibXR::DatabaseRaw<1> database(flash);
 
-  peripherals.Register(LibXR::Entry<LibXR::Database>{database, {"database"}});
-  XRobotMain(peripherals);
+  XR_REGISTER(database, LibXR::Database);
+  XROBOT_MAIN();
   /* User Code End 3 */
 }

@@ -32,24 +32,19 @@ jobs:
       - name: init submodule
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE" && git submodule update --init --recursive
 
-      - name: install pip packages
-        run: pip install libxr xrobot
-
-      - name: config libxr
-        run: xr_cubemx_cfg -d ./ --xrobot
-
-      - name: xrobot generate code
-        run: xrobot_setup
+      - name: install pinned LibXR and PLDX modules
+        run: |
+          python3 tools/setup_libxr2.py
+          echo "$GITHUB_WORKSPACE/.venv-xrobot2/bin" >> "$GITHUB_PATH"
 
       - name: config cmake
         run: |
           export GCC_TOOLCHAIN_ROOT=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin
           export CLANG_GCC_CMSIS_COMPILER=/opt/st-arm-clang
-          cmake . -DCMAKE_TOOLCHAIN_FILE:STRING=cmake/starm-clang.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Bbuild -G Ninja
+          cmake . -DCMAKE_TOOLCHAIN_FILE:STRING=cmake/starm-clang.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DXROBOT_CONFIG:FILEPATH=User/RobotConfig/${{ matrix.robot_config }}.yaml -Bbuild -G Ninja
 
       - name: build ${{ matrix.robot_config }}
         run: |
-          xrobot_gen_main --config User/RobotConfig/${{ matrix.robot_config }}.yaml
           cmake --build build
 
       - name: package firmware

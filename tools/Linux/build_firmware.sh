@@ -178,6 +178,10 @@ resolve_cube_cli() {
 }
 
 resolve_cube_cmake() {
+  if command_exists cmake; then
+    CUBE_CMAKE_BIN="$(command -v cmake)"
+    return 0
+  fi
   if command_exists cube-cmake; then
     CUBE_CMAKE_BIN="$(command -v cube-cmake)"
     return 0
@@ -398,10 +402,10 @@ BUILD_TYPE="$(preset_build_type "${PRESET:-$DEFAULT_PRESET}")"
 # ---------------- preflight（对应 ps1 L548-579）----------------
 
 resolve_local_python_tools
+add_path_front "$REPO_ROOT/.venv-xrobot2/bin"
 
-command_exists xrobot_gen_main || die 'xrobot_gen_main not found in PATH.'
+command_exists xrobot || die 'xrobot 1.0.1 not found in PATH; run python3 tools/setup_libxr2.py.'
 
-resolve_cube_cli || die 'cube not found in PATH or STM32 VS Code extension directories.'
 resolve_cube_cmake || die 'cube-cmake not found in PATH or STM32 VS Code extension directories.'
 
 resolve_stm32_toolchains

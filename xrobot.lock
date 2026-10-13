@@ -1,0 +1,92 @@
+version: 1
+modules:
+  GUET-PLDX/BMI088:
+    repo: https://github.com/GUET-PLDX/BMI088.git
+    commit: bac25f5cc3010f17d3f5d25b30cc8ddac7724021
+  GUET-PLDX/BlinkLED:
+    repo: https://github.com/GUET-PLDX/BlinkLED.git
+    commit: 4b0244a4908f1b8720d8ec57d20ea022beba7f78
+  GUET-PLDX/BuzzerAlarm:
+    repo: https://github.com/GUET-PLDX/BuzzerAlarm.git
+    commit: 74ffd823ea6b240a7e5038f12ab6f95e799641fb
+  GUET-PLDX/CMD:
+    repo: https://github.com/GUET-PLDX/CMD.git
+    commit: 60209d669bb9f38bdca6c9ed2127fbddbd36ddbc
+  GUET-PLDX/CameraSync:
+    repo: https://github.com/GUET-PLDX/CameraSync.git
+    commit: d61ac94cda6ac65420ca3ea6382cde5d87694e49
+  GUET-PLDX/Chassis:
+    repo: https://github.com/GUET-PLDX/Chassis.git
+    commit: 4d88f9619225c65e3e9a60f1dab58a1c49d495a1
+  GUET-PLDX/DMMotor:
+    repo: https://github.com/GUET-PLDX/DMMotor.git
+    commit: c5d513ef3ab54bef7ba8ebca87b35e3f17820e15
+  GUET-PLDX/DR16:
+    repo: https://github.com/GUET-PLDX/DR16.git
+    commit: 927daa9985f283825906cd2fccc7a6bfd014cb17
+  GUET-PLDX/Dart:
+    repo: https://github.com/GUET-PLDX/Dart.git
+    commit: 060b02ecc1ad5f09f22ebb6edaa7c9ced4980f7d
+  GUET-PLDX/DebugCore:
+    repo: https://github.com/GUET-PLDX/DebugCore.git
+    commit: 14de7e8b300563ed1c65be50527414b24177d402
+  GUET-PLDX/DualBoard:
+    repo: https://github.com/GUET-PLDX/DualBoard.git
+    commit: c5dc16e5a5934fb41225b321272da9b3d96d08c9
+  GUET-PLDX/EventBinder:
+    repo: https://github.com/GUET-PLDX/EventBinder.git
+    commit: 96f84231567497b8e3a37048a8df80933b661449
+  GUET-PLDX/Gimbal:
+    repo: https://github.com/GUET-PLDX/Gimbal.git
+    commit: b973c75e606bc93475fe57f4a62370910f5ba541
+  GUET-PLDX/HeroLauncher:
+    repo: https://github.com/GUET-PLDX/HeroLauncher.git
+    commit: 518f4f639f62f2cfc72ad032998a5b4436e8ee9b
+  GUET-PLDX/HostData:
+    repo: https://github.com/GUET-PLDX/HostData.git
+    commit: e1f2d3697a1ebacc6af79b694bce4e5f5e537dbd
+  GUET-PLDX/HostDataLink:
+    repo: https://github.com/GUET-PLDX/NavHostData.git
+    commit: dc90585bcf93d92c6891f214d848600bf722cf17
+  GUET-PLDX/IST8310:
+    repo: https://github.com/GUET-PLDX/IST8310.git
+    commit: 025528f5b35c7ee2826050117c5842605672a05a
+  GUET-PLDX/InfantryLauncher:
+    repo: https://github.com/GUET-PLDX/InfantryLauncher.git
+    commit: ad03376787e24b493e74cedc2bb64a563f9c16a9
+  GUET-PLDX/MadgwickAHRS:
+    repo: https://github.com/GUET-PLDX/MadgwickAHRS.git
+    commit: 4b10bd0c1a7f24b521cfc0a01d0892a01c9c1144
+  GUET-PLDX/MiniGimbal:
+    repo: https://github.com/GUET-PLDX/MiniGimbal.git
+    commit: fbceb764ad034c5d2e71f21286e9b16d2171c09b
+  GUET-PLDX/Motor:
+    repo: https://github.com/GUET-PLDX/Motor.git
+    commit: 4b1ae100af5c2cb2e3ce8bbfc072c0e1e6a16624
+  GUET-PLDX/PowerControl:
+    repo: https://github.com/GUET-PLDX/PowerControl.git
+    commit: 2a0aaac614571a7086a52a61ee2e054a568bddf7
+  GUET-PLDX/RMMotor:
+    repo: https://github.com/GUET-PLDX/RMMotor.git
+    commit: a1fe6d263b65a1c0d0f22c8dd7c62d1520b88974
+  GUET-PLDX/Referee:
+    repo: https://github.com/GUET-PLDX/Referee.git
+    commit: c9b71a3a2364473214d55525751022fda6298271
+  GUET-PLDX/SentryProtocol:
+    repo: https://github.com/GUET-PLDX/SentryProtocol.git
+    commit: 70020d8fba5a71f0178d30caebaeac642b204d08
+  GUET-PLDX/SharedTopic:
+    repo: https://github.com/GUET-PLDX/SharedTopic.git
+    commit: 04c6b2ca1185331484da8a6a0b58a6e3cb06a4f6
+  GUET-PLDX/SharedTopicClient:
+    repo: https://github.com/GUET-PLDX/SharedTopicClient.git
+    commit: 2e734b6b4e0b1ee5264b1ec5d7d9383972c798b6
+  GUET-PLDX/SuperPower:
+    repo: https://github.com/GUET-PLDX/SuperPower.git
+    commit: b322c8385b800717b3b473eee6fc73b355dbce56
+  GUET-PLDX/TalosLink:
+    repo: https://github.com/GUET-PLDX/TalosLink.git
+    commit: b5872cc7c931728cd95404e193adc3ef9c0b2b73
+  GUET-PLDX/VT13:
+    repo: https://github.com/GUET-PLDX/VT13.git
+    commit: afef36d0a44f1b444dfccdb855227479e556d2b2
