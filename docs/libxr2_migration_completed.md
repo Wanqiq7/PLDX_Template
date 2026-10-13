@@ -1,6 +1,6 @@
 # PLDX 模块静态装配迁移
 
-完成日期：2026-10-13。已迁移当前 30 个 PLDX 模块的旧框架接口；两板固件在 LibXR v2.0.1、xrobot 1.0.1 下通过编译。模块迁移已分别提交至各模块仓库；未刷写固件。
+完成日期：2026-10-13。已迁移当前 30 个 PLDX 模块的旧框架接口；两板固件在 LibXR v2.0.1、xrobot 1.0.1 下通过编译。30 个模块迁移已分别提交并推送至各模块仓库；主工程保留远端历史并固定发布版本，未刷写固件。
 
 ## 版本与源码归属
 
@@ -25,7 +25,7 @@
 
 所有模块 manifest 只保留描述、依赖和库标记，构造函数成为参数接口。模块 README 已记录新装配约定。Motor 标记为 `standalone: false`。
 
-BSP 使用 `XR_REGISTER` / `XROBOT_MAIN()`，保留已有外设别名与 USB Talos 通道独占行为。USB CDC 的 SetConfig 增加并传递 `in_isr`。Flash 使用新版 FlashRegion 表，描述 STM32F407 的 4×16 KiB、1×64 KiB、7×128 KiB 扇区，数据库仍使用 `0x080C0000` / `0x080E0000` 两个扇区。旧生成文件 `User/flash_map.hpp` 未手工编辑。
+BSP 使用 `XR_REGISTER` / `XROBOT_MAIN()`，保留已有外设别名与 USB Talos 通道独占行为。USB CDC 的 SetConfig 增加并传递 `in_isr`。Flash 使用新版 FlashRegion 表，描述 STM32F407 的 4×16 KiB、1×64 KiB、7×128 KiB 扇区，数据库仍使用 `0x080C0000` / `0x080E0000` 两个扇区。`User/flash_map.hpp` 保留远端独立提交生成的新版表，未手工编辑。
 
 两份机器人配置与默认 BlinkLED 配置改为 `module` / 有序 `args`；旧 YAML 中与实际构造函数不同的标签已对齐。PID 与 Quaternion 使用完整 C++ 聚合表达式，参数值保持原配置。EventBinder 使用显式模块事件表。非空 OnMonitor 保留，直接进入生成器监控循环。
 
